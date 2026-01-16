@@ -1,104 +1,454 @@
-< !DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>極簡 P2P 傳訊器</title>
-    <!-- 引入 PeerJS 函式庫 -->
-    <script src="https://unpkg.com"></script>
-    <style>
-        body { font-family: -apple-system, sans-serif; background: #e5ddd5; display: flex; flex-direction: column; height: 100vh; margin: 0; }
-        header { background: #075e54; color: white; padding: 15px; text-align: center; font-weight: bold; }
-        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 8px 15px; border-radius: 10px; max-width: 70%; word-wrap: break-word; }
-        .me { align-self: flex-end; background: #dcf8c6; }
-        .friend { align-self: flex-start; background: white; }
-        .controls { background: #f0f0f0; padding: 10px; display: flex; gap: 10px; }
-        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
-        button { background: #075e54; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; }
-    </style>
-</head>
-<body>
-
-<header>
-    我的 ID: <span id="my-id">連線中...</span>
-</header>
-
-<div id="chat">
-    <div class="msg friend">系統：請將你的 ID 給朋友，或輸入朋友的 ID 連線。</div>
-</div>
-
-<!-- 連線控制區 -->
-<div class="controls">
-    <input type="text" id="remote-id" placeholder="輸入對方的 ID">
-    <button onclick="connectToPeer()">連線</button>
-</div>
-
-<!-- 訊息輸入區 -->
-<div class="controls">
-    <input type="text" id="message" placeholder="輸入訊息...">
-    <button onclick="sendMessage()">發送</button>
-</div>
-
-<script>
-    const myIdDisplay = document.getElementById('my-id');
-    const chatBox = document.getElementById('chat');
-    const remoteIdInput = document.getElementById('remote-id');
-    const messageInput = document.getElementById('message');
-
-    // 1. 初始化 Peer 對象
-    const peer = new Peer(); 
-    let conn;
-
-    // 當自己的 ID 產生時顯示出來
-    peer.on('open', id => myIdDisplay.innerText = id);
-
-    // 2. 監聽別人的連線
-    peer.on('connection', (incomingConn) => {
-        conn = incomingConn;
-        setupChat();
-    });
-
-    // 3. 主動連線功能
-    function connectToPeer() {
-        const id = remoteIdInput.value;
-        if (id) {
-            conn = peer.connect(id);
-            setupChat();
-        }
-    }
-
-    // 4. 設定通訊管道
-    function setupChat() {
-        conn.on('open', () => {
-            appendMessage("系統: 已成功連線！", 'friend');
-            // 接收數據
-            conn.on('data', (data) => appendMessage(data, 'friend'));
-        });
-    }
-
-    // 5. 發送訊息
-    function sendMessage() {
-        const msg = messageInput.value;
-        if (conn && conn.open && msg) {
-            conn.send(msg);
-            appendMessage(msg, 'me');
-            messageInput.value = "";
-        } else {
-            alert("尚未連線或訊息為空");
-        }
-    }
-
-    // 顯示訊息到畫面上
-    function appendMessage(text, type) {
-        const div = document.createElement('div');
-        div.className = `msg ${type}`;
-        div.innerText = text;
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight; // 自動捲動到底部
-    }
-</script>
-
-</body>
-</html>
-
++   1 <!DOCTYPE html>
++   2 <html lang="en">
++   3 <head>
++   4     <meta charset="UTF-8">
++   5     <meta name="viewport" content="width=device-width, initial-scale=1.0">
++   6     <title>Message Share</title>
++   7     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
++   8     <style>
++   9         * {
++  10             margin: 0;
++  11             padding: 0;
++  12             box-sizing: border-box;
++  13         }
++  14 
++  15         body {
++  16             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
++  17             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
++  18             min-height: 100vh;
++  19             display: flex;
++  20             align-items: center;
++  21             justify-content: center;
++  22             padding: 20px;
++  23         }
++  24 
++  25         .container {
++  26             background: white;
++  27             border-radius: 20px;
++  28             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
++  29             width: 100%;
++  30             max-width: 500px;
++  31             overflow: hidden;
++  32         }
++  33 
++  34         .header {
++  35             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
++  36             color: white;
++  37             padding: 25px;
++  38             text-align: center;
++  39         }
++  40 
++  41         .header h1 {
++  42             font-size: 1.8rem;
++  43             margin-bottom: 5px;
++  44         }
++  45 
++  46         .header p {
++  47             opacity: 0.9;
++  48             font-size: 0.95rem;
++  49         }
++  50 
++  51         .form-container {
++  52             padding: 30px;
++  53         }
++  54 
++  55         .form-group {
++  56             margin-bottom: 20px;
++  57         }
++  58 
++  59         .form-group label {
++  60             display: block;
++  61             margin-bottom: 8px;
++  62             font-weight: 600;
++  63             color: #333;
++  64             font-size: 0.95rem;
++  65         }
++  66 
++  67         .form-group input,
++  68         .form-group textarea {
++  69             width: 100%;
++  70             padding: 14px;
++  71             border: 2px solid #e0e0e0;
++  72             border-radius: 12px;
++  73             font-size: 1rem;
++  74             transition: border-color 0.3s, box-shadow 0.3s;
++  75             font-family: inherit;
++  76         }
++  77 
++  78         .form-group input:focus,
++  79         .form-group textarea:focus {
++  80             outline: none;
++  81             border-color: #667eea;
++  82             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
++  83         }
++  84 
++  85         .form-group textarea {
++  86             resize: vertical;
++  87             min-height: 120px;
++  88         }
++  89 
++  90         .form-group input::placeholder,
++  91         .form-group textarea::placeholder {
++  92             color: #999;
++  93         }
++  94 
++  95         .share-btn {
++  96             width: 100%;
++  97             padding: 16px;
++  98             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
++  99             color: white;
++ 100             border: none;
++ 101             border-radius: 12px;
++ 102             font-size: 1.1rem;
++ 103             font-weight: 600;
++ 104             cursor: pointer;
++ 105             display: flex;
++ 106             align-items: center;
++ 107             justify-content: center;
++ 108             gap: 10px;
++ 109             transition: transform 0.2s, box-shadow 0.2s;
++ 110         }
++ 111 
++ 112         .share-btn:hover {
++ 113             transform: translateY(-2px);
++ 114             box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
++ 115         }
++ 116 
++ 117         .share-btn:active {
++ 118             transform: translateY(0);
++ 119         }
++ 120 
++ 121         .fallback-options {
++ 122             display: none;
++ 123             margin-top: 25px;
++ 124             padding-top: 25px;
++ 125             border-top: 1px solid #e0e0e0;
++ 126         }
++ 127 
++ 128         .fallback-options.show {
++ 129             display: block;
++ 130         }
++ 131 
++ 132         .fallback-options h3 {
++ 133             text-align: center;
++ 134             color: #333;
++ 135             margin-bottom: 20px;
++ 136             font-size: 1rem;
++ 137         }
++ 138 
++ 139         .share-icons {
++ 140             display: grid;
++ 141             grid-template-columns: repeat(4, 1fr);
++ 142             gap: 15px;
++ 143         }
++ 144 
++ 145         .share-icon {
++ 146             display: flex;
++ 147             flex-direction: column;
++ 148             align-items: center;
++ 149             gap: 8px;
++ 150             padding: 15px 10px;
++ 151             border-radius: 12px;
++ 152             cursor: pointer;
++ 153             transition: background 0.2s, transform 0.2s;
++ 154             text-decoration: none;
++ 155         }
++ 156 
++ 157         .share-icon:hover {
++ 158             background: #f5f5f5;
++ 159             transform: scale(1.05);
++ 160         }
++ 161 
++ 162         .share-icon i {
++ 163             font-size: 1.8rem;
++ 164         }
++ 165 
++ 166         .share-icon span {
++ 167             font-size: 0.75rem;
++ 168             color: #666;
++ 169             font-weight: 500;
++ 170         }
++ 171 
++ 172         .share-icon.whatsapp i { color: #25D366; }
++ 173         .share-icon.telegram i { color: #0088cc; }
++ 174         .share-icon.twitter i { color: #1DA1F2; }
++ 175         .share-icon.email i { color: #EA4335; }
++ 176         .share-icon.sms i { color: #34B7F1; }
++ 177         .share-icon.facebook i { color: #1877F2; }
++ 178         .share-icon.linkedin i { color: #0A66C2; }
++ 179         .share-icon.copy i { color: #667eea; }
++ 180 
++ 181         .status-message {
++ 182             text-align: center;
++ 183             padding: 12px;
++ 184             border-radius: 8px;
++ 185             margin-top: 15px;
++ 186             display: none;
++ 187             font-weight: 500;
++ 188         }
++ 189 
++ 190         .status-message.success {
++ 191             display: block;
++ 192             background: #d4edda;
++ 193             color: #155724;
++ 194         }
++ 195 
++ 196         .status-message.error {
++ 197             display: block;
++ 198             background: #f8d7da;
++ 199             color: #721c24;
++ 200         }
++ 201 
++ 202         .device-info {
++ 203             text-align: center;
++ 204             padding: 15px;
++ 205             background: #f8f9fa;
++ 206             font-size: 0.85rem;
++ 207             color: #666;
++ 208         }
++ 209 
++ 210         .device-info i {
++ 211             margin-right: 5px;
++ 212         }
++ 213 
++ 214         @media (max-width: 480px) {
++ 215             .container {
++ 216                 border-radius: 15px;
++ 217             }
++ 218 
++ 219             .header {
++ 220                 padding: 20px;
++ 221             }
++ 222 
++ 223             .header h1 {
++ 224                 font-size: 1.5rem;
++ 225             }
++ 226 
++ 227             .form-container {
++ 228                 padding: 20px;
++ 229             }
++ 230 
++ 231             .share-icons {
++ 232                 grid-template-columns: repeat(4, 1fr);
++ 233                 gap: 10px;
++ 234             }
++ 235 
++ 236             .share-icon {
++ 237                 padding: 12px 8px;
++ 238             }
++ 239 
++ 240             .share-icon i {
++ 241                 font-size: 1.5rem;
++ 242             }
++ 243         }
++ 244     </style>
++ 245 </head>
++ 246 <body>
++ 247     <div class="container">
++ 248         <div class="header">
++ 249             <h1><i class="fas fa-share-alt"></i> Message Share</h1>
++ 250             <p>Share your message across platforms</p>
++ 251         </div>
++ 252 
++ 253         <div class="form-container">
++ 254             <div class="form-group">
++ 255                 <label for="title"><i class="fas fa-heading"></i> Title</label>
++ 256                 <input type="text" id="title" placeholder="Enter a title for your message">
++ 257             </div>
++ 258 
++ 259             <div class="form-group">
++ 260                 <label for="message"><i class="fas fa-comment-alt"></i> Message</label>
++ 261                 <textarea id="message" placeholder="Type your message here..."></textarea>
++ 262             </div>
++ 263 
++ 264             <div class="form-group">
++ 265                 <label for="url"><i class="fas fa-link"></i> URL (optional)</label>
++ 266                 <input type="url" id="url" placeholder="https://example.com">
++ 267             </div>
++ 268 
++ 269             <button class="share-btn" onclick="shareMessage()">
++ 270                 <i class="fas fa-paper-plane"></i>
++ 271                 Share Message
++ 272             </button>
++ 273 
++ 274             <div id="statusMessage" class="status-message"></div>
++ 275 
++ 276             <div id="fallbackOptions" class="fallback-options">
++ 277                 <h3>Or share via:</h3>
++ 278                 <div class="share-icons">
++ 279                     <a class="share-icon whatsapp" onclick="shareVia('whatsapp')">
++ 280                         <i class="fab fa-whatsapp"></i>
++ 281                         <span>WhatsApp</span>
++ 282                     </a>
++ 283                     <a class="share-icon telegram" onclick="shareVia('telegram')">
++ 284                         <i class="fab fa-telegram"></i>
++ 285                         <span>Telegram</span>
++ 286                     </a>
++ 287                     <a class="share-icon twitter" onclick="shareVia('twitter')">
++ 288                         <i class="fab fa-x-twitter"></i>
++ 289                         <span>X</span>
++ 290                     </a>
++ 291                     <a class="share-icon facebook" onclick="shareVia('facebook')">
++ 292                         <i class="fab fa-facebook"></i>
++ 293                         <span>Facebook</span>
++ 294                     </a>
++ 295                     <a class="share-icon linkedin" onclick="shareVia('linkedin')">
++ 296                         <i class="fab fa-linkedin"></i>
++ 297                         <span>LinkedIn</span>
++ 298                     </a>
++ 299                     <a class="share-icon email" onclick="shareVia('email')">
++ 300                         <i class="fas fa-envelope"></i>
++ 301                         <span>Email</span>
++ 302                     </a>
++ 303                     <a class="share-icon sms" onclick="shareVia('sms')">
++ 304                         <i class="fas fa-sms"></i>
++ 305                         <span>SMS</span>
++ 306                     </a>
++ 307                     <a class="share-icon copy" onclick="copyToClipboard()">
++ 308                         <i class="fas fa-copy"></i>
++ 309                         <span>Copy</span>
++ 310                     </a>
++ 311                 </div>
++ 312             </div>
++ 313         </div>
++ 314 
++ 315         <div class="device-info" id="deviceInfo">
++ 316             <i class="fas fa-info-circle"></i>
++ 317             <span id="deviceText">Detecting device...</span>
++ 318         </div>
++ 319     </div>
++ 320 
++ 321     <script>
++ 322         // Detect device and update info
++ 323         function detectDevice() {
++ 324             const ua = navigator.userAgent;
++ 325             let device = 'Desktop';
++ 326             let icon = 'fa-desktop';
++ 327 
++ 328             if (/Android/i.test(ua)) {
++ 329                 device = 'Android Device';
++ 330                 icon = 'fa-android';
++ 331             } else if (/iPhone|iPad|iPod/i.test(ua)) {
++ 332                 device = 'iOS Device';
++ 333                 icon = 'fa-apple';
++ 334             } else if (/Windows Phone/i.test(ua)) {
++ 335                 device = 'Windows Phone';
++ 336                 icon = 'fa-windows';
++ 337             } else if (/Mobile/i.test(ua)) {
++ 338                 device = 'Mobile Device';
++ 339                 icon = 'fa-mobile-alt';
++ 340             }
++ 341 
++ 342             const webShareSupported = navigator.share ? 'Web Share API supported' : 'Using fallback sharing';
++ 343             document.getElementById('deviceText').innerHTML = `${device} | ${webShareSupported}`;
++ 344         }
++ 345 
++ 346         detectDevice();
++ 347 
++ 348         function getShareData() {
++ 349             const title = document.getElementById('title').value.trim();
++ 350             const message = document.getElementById('message').value.trim();
++ 351             const url = document.getElementById('url').value.trim();
++ 352 
++ 353             if (!message && !title) {
++ 354                 showStatus('Please enter a title or message to share', 'error');
++ 355                 return null;
++ 356             }
++ 357 
++ 358             return { title, text: message, url };
++ 359         }
++ 360 
++ 361         function showStatus(message, type) {
++ 362             const statusEl = document.getElementById('statusMessage');
++ 363             statusEl.textContent = message;
++ 364             statusEl.className = 'status-message ' + type;
++ 365             
++ 366             setTimeout(() => {
++ 367                 statusEl.className = 'status-message';
++ 368             }, 3000);
++ 369         }
++ 370 
++ 371         async function shareMessage() {
++ 372             const shareData = getShareData();
++ 373             if (!shareData) return;
++ 374 
++ 375             // Check if Web Share API is supported
++ 376             if (navigator.share) {
++ 377                 try {
++ 378                     await navigator.share(shareData);
++ 379                     showStatus('Shared successfully!', 'success');
++ 380                 } catch (err) {
++ 381                     if (err.name !== 'AbortError') {
++ 382                         // Show fallback options if sharing failed
++ 383                         document.getElementById('fallbackOptions').classList.add('show');
++ 384                         showStatus('Native share cancelled. Use options below.', 'error');
++ 385                     }
++ 386                 }
++ 387             } else {
++ 388                 // Show fallback options for browsers without Web Share API
++ 389                 document.getElementById('fallbackOptions').classList.add('show');
++ 390                 showStatus('Web Share not supported. Use options below.', 'error');
++ 391             }
++ 392         }
++ 393 
++ 394         function shareVia(platform) {
++ 395             const shareData = getShareData();
++ 396             if (!shareData) return;
++ 397 
++ 398             const text = encodeURIComponent(shareData.text || '');
++ 399             const title = encodeURIComponent(shareData.title || '');
++ 400             const url = encodeURIComponent(shareData.url || '');
++ 401             const fullText = encodeURIComponent(
++ 402                 (shareData.title ? shareData.title + '\n\n' : '') + 
++ 403                 (shareData.text || '') + 
++ 404                 (shareData.url ? '\n\n' + shareData.url : '')
++ 405             );
++ 406 
++ 407             const urls = {
++ 408                 whatsapp: `https://wa.me/?text=${fullText}`,
++ 409                 telegram: `https://t.me/share/url?url=${url}&text=${text}`,
++ 410                 twitter: `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
++ 411                 facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`,
++ 412                 linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
++ 413                 email: `mailto:?subject=${title}&body=${fullText}`,
++ 414                 sms: `sms:?body=${fullText}`
++ 415             };
++ 416 
++ 417             if (urls[platform]) {
++ 418                 window.open(urls[platform], '_blank');
++ 419                 showStatus(`Opening ${platform}...`, 'success');
++ 420             }
++ 421         }
++ 422 
++ 423         async function copyToClipboard() {
++ 424             const shareData = getShareData();
++ 425             if (!shareData) return;
++ 426 
++ 427             const fullText = 
++ 428                 (shareData.title ? shareData.title + '\n\n' : '') + 
++ 429                 (shareData.text || '') + 
++ 430                 (shareData.url ? '\n\n' + shareData.url : '');
++ 431 
++ 432             try {
++ 433                 await navigator.clipboard.writeText(fullText);
++ 434                 showStatus('Copied to clipboard!', 'success');
++ 435             } catch (err) {
++ 436                 // Fallback for older browsers
++ 437                 const textarea = document.createElement('textarea');
++ 438                 textarea.value = fullText;
++ 439                 textarea.style.position = 'fixed';
++ 440                 textarea.style.opacity = '0';
++ 441                 document.body.appendChild(textarea);
++ 442                 textarea.select();
++ 443                 try {
++ 444                     document.execCommand('copy');
++ 445                     showStatus('Copied to clipboard!', 'success');
++ 446                 } catch (e) {
++ 447                     showStatus('Failed to copy', 'error');
++ 448                 }
++ 449                 document.body.removeChild(textarea);
++ 450             }
++ 451         }
++ 452     </script>
++ 453 </body>
++ 454 </html>
