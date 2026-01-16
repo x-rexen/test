@@ -1,454 +1,454 @@
-+   1 <!DOCTYPE html>
-+   2 <html lang="en">
-+   3 <head>
-+   4     <meta charset="UTF-8">
-+   5     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-+   6     <title>Message Share</title>
-+   7     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-+   8     <style>
-+   9         * {
-+  10             margin: 0;
-+  11             padding: 0;
-+  12             box-sizing: border-box;
-+  13         }
-+  14 
-+  15         body {
-+  16             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-+  17             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-+  18             min-height: 100vh;
-+  19             display: flex;
-+  20             align-items: center;
-+  21             justify-content: center;
-+  22             padding: 20px;
-+  23         }
-+  24 
-+  25         .container {
-+  26             background: white;
-+  27             border-radius: 20px;
-+  28             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-+  29             width: 100%;
-+  30             max-width: 500px;
-+  31             overflow: hidden;
-+  32         }
-+  33 
-+  34         .header {
-+  35             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-+  36             color: white;
-+  37             padding: 25px;
-+  38             text-align: center;
-+  39         }
-+  40 
-+  41         .header h1 {
-+  42             font-size: 1.8rem;
-+  43             margin-bottom: 5px;
-+  44         }
-+  45 
-+  46         .header p {
-+  47             opacity: 0.9;
-+  48             font-size: 0.95rem;
-+  49         }
-+  50 
-+  51         .form-container {
-+  52             padding: 30px;
-+  53         }
-+  54 
-+  55         .form-group {
-+  56             margin-bottom: 20px;
-+  57         }
-+  58 
-+  59         .form-group label {
-+  60             display: block;
-+  61             margin-bottom: 8px;
-+  62             font-weight: 600;
-+  63             color: #333;
-+  64             font-size: 0.95rem;
-+  65         }
-+  66 
-+  67         .form-group input,
-+  68         .form-group textarea {
-+  69             width: 100%;
-+  70             padding: 14px;
-+  71             border: 2px solid #e0e0e0;
-+  72             border-radius: 12px;
-+  73             font-size: 1rem;
-+  74             transition: border-color 0.3s, box-shadow 0.3s;
-+  75             font-family: inherit;
-+  76         }
-+  77 
-+  78         .form-group input:focus,
-+  79         .form-group textarea:focus {
-+  80             outline: none;
-+  81             border-color: #667eea;
-+  82             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-+  83         }
-+  84 
-+  85         .form-group textarea {
-+  86             resize: vertical;
-+  87             min-height: 120px;
-+  88         }
-+  89 
-+  90         .form-group input::placeholder,
-+  91         .form-group textarea::placeholder {
-+  92             color: #999;
-+  93         }
-+  94 
-+  95         .share-btn {
-+  96             width: 100%;
-+  97             padding: 16px;
-+  98             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-+  99             color: white;
-+ 100             border: none;
-+ 101             border-radius: 12px;
-+ 102             font-size: 1.1rem;
-+ 103             font-weight: 600;
-+ 104             cursor: pointer;
-+ 105             display: flex;
-+ 106             align-items: center;
-+ 107             justify-content: center;
-+ 108             gap: 10px;
-+ 109             transition: transform 0.2s, box-shadow 0.2s;
-+ 110         }
-+ 111 
-+ 112         .share-btn:hover {
-+ 113             transform: translateY(-2px);
-+ 114             box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-+ 115         }
-+ 116 
-+ 117         .share-btn:active {
-+ 118             transform: translateY(0);
-+ 119         }
-+ 120 
-+ 121         .fallback-options {
-+ 122             display: none;
-+ 123             margin-top: 25px;
-+ 124             padding-top: 25px;
-+ 125             border-top: 1px solid #e0e0e0;
-+ 126         }
-+ 127 
-+ 128         .fallback-options.show {
-+ 129             display: block;
-+ 130         }
-+ 131 
-+ 132         .fallback-options h3 {
-+ 133             text-align: center;
-+ 134             color: #333;
-+ 135             margin-bottom: 20px;
-+ 136             font-size: 1rem;
-+ 137         }
-+ 138 
-+ 139         .share-icons {
-+ 140             display: grid;
-+ 141             grid-template-columns: repeat(4, 1fr);
-+ 142             gap: 15px;
-+ 143         }
-+ 144 
-+ 145         .share-icon {
-+ 146             display: flex;
-+ 147             flex-direction: column;
-+ 148             align-items: center;
-+ 149             gap: 8px;
-+ 150             padding: 15px 10px;
-+ 151             border-radius: 12px;
-+ 152             cursor: pointer;
-+ 153             transition: background 0.2s, transform 0.2s;
-+ 154             text-decoration: none;
-+ 155         }
-+ 156 
-+ 157         .share-icon:hover {
-+ 158             background: #f5f5f5;
-+ 159             transform: scale(1.05);
-+ 160         }
-+ 161 
-+ 162         .share-icon i {
-+ 163             font-size: 1.8rem;
-+ 164         }
-+ 165 
-+ 166         .share-icon span {
-+ 167             font-size: 0.75rem;
-+ 168             color: #666;
-+ 169             font-weight: 500;
-+ 170         }
-+ 171 
-+ 172         .share-icon.whatsapp i { color: #25D366; }
-+ 173         .share-icon.telegram i { color: #0088cc; }
-+ 174         .share-icon.twitter i { color: #1DA1F2; }
-+ 175         .share-icon.email i { color: #EA4335; }
-+ 176         .share-icon.sms i { color: #34B7F1; }
-+ 177         .share-icon.facebook i { color: #1877F2; }
-+ 178         .share-icon.linkedin i { color: #0A66C2; }
-+ 179         .share-icon.copy i { color: #667eea; }
-+ 180 
-+ 181         .status-message {
-+ 182             text-align: center;
-+ 183             padding: 12px;
-+ 184             border-radius: 8px;
-+ 185             margin-top: 15px;
-+ 186             display: none;
-+ 187             font-weight: 500;
-+ 188         }
-+ 189 
-+ 190         .status-message.success {
-+ 191             display: block;
-+ 192             background: #d4edda;
-+ 193             color: #155724;
-+ 194         }
-+ 195 
-+ 196         .status-message.error {
-+ 197             display: block;
-+ 198             background: #f8d7da;
-+ 199             color: #721c24;
-+ 200         }
-+ 201 
-+ 202         .device-info {
-+ 203             text-align: center;
-+ 204             padding: 15px;
-+ 205             background: #f8f9fa;
-+ 206             font-size: 0.85rem;
-+ 207             color: #666;
-+ 208         }
-+ 209 
-+ 210         .device-info i {
-+ 211             margin-right: 5px;
-+ 212         }
-+ 213 
-+ 214         @media (max-width: 480px) {
-+ 215             .container {
-+ 216                 border-radius: 15px;
-+ 217             }
-+ 218 
-+ 219             .header {
-+ 220                 padding: 20px;
-+ 221             }
-+ 222 
-+ 223             .header h1 {
-+ 224                 font-size: 1.5rem;
-+ 225             }
-+ 226 
-+ 227             .form-container {
-+ 228                 padding: 20px;
-+ 229             }
-+ 230 
-+ 231             .share-icons {
-+ 232                 grid-template-columns: repeat(4, 1fr);
-+ 233                 gap: 10px;
-+ 234             }
-+ 235 
-+ 236             .share-icon {
-+ 237                 padding: 12px 8px;
-+ 238             }
-+ 239 
-+ 240             .share-icon i {
-+ 241                 font-size: 1.5rem;
-+ 242             }
-+ 243         }
-+ 244     </style>
-+ 245 </head>
-+ 246 <body>
-+ 247     <div class="container">
-+ 248         <div class="header">
-+ 249             <h1><i class="fas fa-share-alt"></i> Message Share</h1>
-+ 250             <p>Share your message across platforms</p>
-+ 251         </div>
-+ 252 
-+ 253         <div class="form-container">
-+ 254             <div class="form-group">
-+ 255                 <label for="title"><i class="fas fa-heading"></i> Title</label>
-+ 256                 <input type="text" id="title" placeholder="Enter a title for your message">
-+ 257             </div>
-+ 258 
-+ 259             <div class="form-group">
-+ 260                 <label for="message"><i class="fas fa-comment-alt"></i> Message</label>
-+ 261                 <textarea id="message" placeholder="Type your message here..."></textarea>
-+ 262             </div>
-+ 263 
-+ 264             <div class="form-group">
-+ 265                 <label for="url"><i class="fas fa-link"></i> URL (optional)</label>
-+ 266                 <input type="url" id="url" placeholder="https://example.com">
-+ 267             </div>
-+ 268 
-+ 269             <button class="share-btn" onclick="shareMessage()">
-+ 270                 <i class="fas fa-paper-plane"></i>
-+ 271                 Share Message
-+ 272             </button>
-+ 273 
-+ 274             <div id="statusMessage" class="status-message"></div>
-+ 275 
-+ 276             <div id="fallbackOptions" class="fallback-options">
-+ 277                 <h3>Or share via:</h3>
-+ 278                 <div class="share-icons">
-+ 279                     <a class="share-icon whatsapp" onclick="shareVia('whatsapp')">
-+ 280                         <i class="fab fa-whatsapp"></i>
-+ 281                         <span>WhatsApp</span>
-+ 282                     </a>
-+ 283                     <a class="share-icon telegram" onclick="shareVia('telegram')">
-+ 284                         <i class="fab fa-telegram"></i>
-+ 285                         <span>Telegram</span>
-+ 286                     </a>
-+ 287                     <a class="share-icon twitter" onclick="shareVia('twitter')">
-+ 288                         <i class="fab fa-x-twitter"></i>
-+ 289                         <span>X</span>
-+ 290                     </a>
-+ 291                     <a class="share-icon facebook" onclick="shareVia('facebook')">
-+ 292                         <i class="fab fa-facebook"></i>
-+ 293                         <span>Facebook</span>
-+ 294                     </a>
-+ 295                     <a class="share-icon linkedin" onclick="shareVia('linkedin')">
-+ 296                         <i class="fab fa-linkedin"></i>
-+ 297                         <span>LinkedIn</span>
-+ 298                     </a>
-+ 299                     <a class="share-icon email" onclick="shareVia('email')">
-+ 300                         <i class="fas fa-envelope"></i>
-+ 301                         <span>Email</span>
-+ 302                     </a>
-+ 303                     <a class="share-icon sms" onclick="shareVia('sms')">
-+ 304                         <i class="fas fa-sms"></i>
-+ 305                         <span>SMS</span>
-+ 306                     </a>
-+ 307                     <a class="share-icon copy" onclick="copyToClipboard()">
-+ 308                         <i class="fas fa-copy"></i>
-+ 309                         <span>Copy</span>
-+ 310                     </a>
-+ 311                 </div>
-+ 312             </div>
-+ 313         </div>
-+ 314 
-+ 315         <div class="device-info" id="deviceInfo">
-+ 316             <i class="fas fa-info-circle"></i>
-+ 317             <span id="deviceText">Detecting device...</span>
-+ 318         </div>
-+ 319     </div>
-+ 320 
-+ 321     <script>
-+ 322         // Detect device and update info
-+ 323         function detectDevice() {
-+ 324             const ua = navigator.userAgent;
-+ 325             let device = 'Desktop';
-+ 326             let icon = 'fa-desktop';
-+ 327 
-+ 328             if (/Android/i.test(ua)) {
-+ 329                 device = 'Android Device';
-+ 330                 icon = 'fa-android';
-+ 331             } else if (/iPhone|iPad|iPod/i.test(ua)) {
-+ 332                 device = 'iOS Device';
-+ 333                 icon = 'fa-apple';
-+ 334             } else if (/Windows Phone/i.test(ua)) {
-+ 335                 device = 'Windows Phone';
-+ 336                 icon = 'fa-windows';
-+ 337             } else if (/Mobile/i.test(ua)) {
-+ 338                 device = 'Mobile Device';
-+ 339                 icon = 'fa-mobile-alt';
-+ 340             }
-+ 341 
-+ 342             const webShareSupported = navigator.share ? 'Web Share API supported' : 'Using fallback sharing';
-+ 343             document.getElementById('deviceText').innerHTML = `${device} | ${webShareSupported}`;
-+ 344         }
-+ 345 
-+ 346         detectDevice();
-+ 347 
-+ 348         function getShareData() {
-+ 349             const title = document.getElementById('title').value.trim();
-+ 350             const message = document.getElementById('message').value.trim();
-+ 351             const url = document.getElementById('url').value.trim();
-+ 352 
-+ 353             if (!message && !title) {
-+ 354                 showStatus('Please enter a title or message to share', 'error');
-+ 355                 return null;
-+ 356             }
-+ 357 
-+ 358             return { title, text: message, url };
-+ 359         }
-+ 360 
-+ 361         function showStatus(message, type) {
-+ 362             const statusEl = document.getElementById('statusMessage');
-+ 363             statusEl.textContent = message;
-+ 364             statusEl.className = 'status-message ' + type;
-+ 365             
-+ 366             setTimeout(() => {
-+ 367                 statusEl.className = 'status-message';
-+ 368             }, 3000);
-+ 369         }
-+ 370 
-+ 371         async function shareMessage() {
-+ 372             const shareData = getShareData();
-+ 373             if (!shareData) return;
-+ 374 
-+ 375             // Check if Web Share API is supported
-+ 376             if (navigator.share) {
-+ 377                 try {
-+ 378                     await navigator.share(shareData);
-+ 379                     showStatus('Shared successfully!', 'success');
-+ 380                 } catch (err) {
-+ 381                     if (err.name !== 'AbortError') {
-+ 382                         // Show fallback options if sharing failed
-+ 383                         document.getElementById('fallbackOptions').classList.add('show');
-+ 384                         showStatus('Native share cancelled. Use options below.', 'error');
-+ 385                     }
-+ 386                 }
-+ 387             } else {
-+ 388                 // Show fallback options for browsers without Web Share API
-+ 389                 document.getElementById('fallbackOptions').classList.add('show');
-+ 390                 showStatus('Web Share not supported. Use options below.', 'error');
-+ 391             }
-+ 392         }
-+ 393 
-+ 394         function shareVia(platform) {
-+ 395             const shareData = getShareData();
-+ 396             if (!shareData) return;
-+ 397 
-+ 398             const text = encodeURIComponent(shareData.text || '');
-+ 399             const title = encodeURIComponent(shareData.title || '');
-+ 400             const url = encodeURIComponent(shareData.url || '');
-+ 401             const fullText = encodeURIComponent(
-+ 402                 (shareData.title ? shareData.title + '\n\n' : '') + 
-+ 403                 (shareData.text || '') + 
-+ 404                 (shareData.url ? '\n\n' + shareData.url : '')
-+ 405             );
-+ 406 
-+ 407             const urls = {
-+ 408                 whatsapp: `https://wa.me/?text=${fullText}`,
-+ 409                 telegram: `https://t.me/share/url?url=${url}&text=${text}`,
-+ 410                 twitter: `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
-+ 411                 facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`,
-+ 412                 linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
-+ 413                 email: `mailto:?subject=${title}&body=${fullText}`,
-+ 414                 sms: `sms:?body=${fullText}`
-+ 415             };
-+ 416 
-+ 417             if (urls[platform]) {
-+ 418                 window.open(urls[platform], '_blank');
-+ 419                 showStatus(`Opening ${platform}...`, 'success');
-+ 420             }
-+ 421         }
-+ 422 
-+ 423         async function copyToClipboard() {
-+ 424             const shareData = getShareData();
-+ 425             if (!shareData) return;
-+ 426 
-+ 427             const fullText = 
-+ 428                 (shareData.title ? shareData.title + '\n\n' : '') + 
-+ 429                 (shareData.text || '') + 
-+ 430                 (shareData.url ? '\n\n' + shareData.url : '');
-+ 431 
-+ 432             try {
-+ 433                 await navigator.clipboard.writeText(fullText);
-+ 434                 showStatus('Copied to clipboard!', 'success');
-+ 435             } catch (err) {
-+ 436                 // Fallback for older browsers
-+ 437                 const textarea = document.createElement('textarea');
-+ 438                 textarea.value = fullText;
-+ 439                 textarea.style.position = 'fixed';
-+ 440                 textarea.style.opacity = '0';
-+ 441                 document.body.appendChild(textarea);
-+ 442                 textarea.select();
-+ 443                 try {
-+ 444                     document.execCommand('copy');
-+ 445                     showStatus('Copied to clipboard!', 'success');
-+ 446                 } catch (e) {
-+ 447                     showStatus('Failed to copy', 'error');
-+ 448                 }
-+ 449                 document.body.removeChild(textarea);
-+ 450             }
-+ 451         }
-+ 452     </script>
-+ 453 </body>
-+ 454 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Share</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .form-container {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #999;
+        }
+
+        .share-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .share-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .share-btn:active {
+            transform: translateY(0);
+        }
+
+        .fallback-options {
+            display: none;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .fallback-options.show {
+            display: block;
+        }
+
+        .fallback-options h3 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+
+        .share-icons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .share-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 15px 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            text-decoration: none;
+        }
+
+        .share-icon:hover {
+            background: #f5f5f5;
+            transform: scale(1.05);
+        }
+
+        .share-icon i {
+            font-size: 1.8rem;
+        }
+
+        .share-icon span {
+            font-size: 0.75rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .share-icon.whatsapp i { color: #25D366; }
+        .share-icon.telegram i { color: #0088cc; }
+        .share-icon.twitter i { color: #1DA1F2; }
+        .share-icon.email i { color: #EA4335; }
+        .share-icon.sms i { color: #34B7F1; }
+        .share-icon.facebook i { color: #1877F2; }
+        .share-icon.linkedin i { color: #0A66C2; }
+        .share-icon.copy i { color: #667eea; }
+
+        .status-message {
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .status-message.success {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-message.error {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .device-info {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .device-info i {
+            margin-right: 5px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .form-container {
+                padding: 20px;
+            }
+
+            .share-icons {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+            }
+
+            .share-icon {
+                padding: 12px 8px;
+            }
+
+            .share-icon i {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-share-alt"></i> Message Share</h1>
+            <p>Share your message across platforms</p>
+        </div>
+
+        <div class="form-container">
+            <div class="form-group">
+                <label for="title"><i class="fas fa-heading"></i> Title</label>
+                <input type="text" id="title" placeholder="Enter a title for your message">
+            </div>
+
+            <div class="form-group">
+                <label for="message"><i class="fas fa-comment-alt"></i> Message</label>
+                <textarea id="message" placeholder="Type your message here..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="url"><i class="fas fa-link"></i> URL (optional)</label>
+                <input type="url" id="url" placeholder="https://example.com">
+            </div>
+
+            <button class="share-btn" onclick="shareMessage()">
+                <i class="fas fa-paper-plane"></i>
+                Share Message
+            </button>
+
+            <div id="statusMessage" class="status-message"></div>
+
+            <div id="fallbackOptions" class="fallback-options">
+                <h3>Or share via:</h3>
+                <div class="share-icons">
+                    <a class="share-icon whatsapp" onclick="shareVia('whatsapp')">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>WhatsApp</span>
+                    </a>
+                    <a class="share-icon telegram" onclick="shareVia('telegram')">
+                        <i class="fab fa-telegram"></i>
+                        <span>Telegram</span>
+                    </a>
+                    <a class="share-icon twitter" onclick="shareVia('twitter')">
+                        <i class="fab fa-x-twitter"></i>
+                        <span>X</span>
+                    </a>
+                    <a class="share-icon facebook" onclick="shareVia('facebook')">
+                        <i class="fab fa-facebook"></i>
+                        <span>Facebook</span>
+                    </a>
+                    <a class="share-icon linkedin" onclick="shareVia('linkedin')">
+                        <i class="fab fa-linkedin"></i>
+                        <span>LinkedIn</span>
+                    </a>
+                    <a class="share-icon email" onclick="shareVia('email')">
+                        <i class="fas fa-envelope"></i>
+                        <span>Email</span>
+                    </a>
+                    <a class="share-icon sms" onclick="shareVia('sms')">
+                        <i class="fas fa-sms"></i>
+                        <span>SMS</span>
+                    </a>
+                    <a class="share-icon copy" onclick="copyToClipboard()">
+                        <i class="fas fa-copy"></i>
+                        <span>Copy</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="device-info" id="deviceInfo">
+            <i class="fas fa-info-circle"></i>
+            <span id="deviceText">Detecting device...</span>
+        </div>
+    </div>
+
+    <script>
+        // Detect device and update info
+        function detectDevice() {
+            const ua = navigator.userAgent;
+            let device = 'Desktop';
+            let icon = 'fa-desktop';
+
+            if (/Android/i.test(ua)) {
+                device = 'Android Device';
+                icon = 'fa-android';
+            } else if (/iPhone|iPad|iPod/i.test(ua)) {
+                device = 'iOS Device';
+                icon = 'fa-apple';
+            } else if (/Windows Phone/i.test(ua)) {
+                device = 'Windows Phone';
+                icon = 'fa-windows';
+            } else if (/Mobile/i.test(ua)) {
+                device = 'Mobile Device';
+                icon = 'fa-mobile-alt';
+            }
+
+            const webShareSupported = navigator.share ? 'Web Share API supported' : 'Using fallback sharing';
+            document.getElementById('deviceText').innerHTML = `${device} | ${webShareSupported}`;
+        }
+
+        detectDevice();
+
+        function getShareData() {
+            const title = document.getElementById('title').value.trim();
+            const message = document.getElementById('message').value.trim();
+            const url = document.getElementById('url').value.trim();
+
+            if (!message && !title) {
+                showStatus('Please enter a title or message to share', 'error');
+                return null;
+            }
+
+            return { title, text: message, url };
+        }
+
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = 'status-message ' + type;
+            
+            setTimeout(() => {
+                statusEl.className = 'status-message';
+            }, 3000);
+        }
+
+        async function shareMessage() {
+            const shareData = getShareData();
+            if (!shareData) return;
+
+            // Check if Web Share API is supported
+            if (navigator.share) {
+                try {
+                    await navigator.share(shareData);
+                    showStatus('Shared successfully!', 'success');
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        // Show fallback options if sharing failed
+                        document.getElementById('fallbackOptions').classList.add('show');
+                        showStatus('Native share cancelled. Use options below.', 'error');
+                    }
+                }
+            } else {
+                // Show fallback options for browsers without Web Share API
+                document.getElementById('fallbackOptions').classList.add('show');
+                showStatus('Web Share not supported. Use options below.', 'error');
+            }
+        }
+
+        function shareVia(platform) {
+            const shareData = getShareData();
+            if (!shareData) return;
+
+            const text = encodeURIComponent(shareData.text || '');
+            const title = encodeURIComponent(shareData.title || '');
+            const url = encodeURIComponent(shareData.url || '');
+            const fullText = encodeURIComponent(
+                (shareData.title ? shareData.title + '\n\n' : '') + 
+                (shareData.text || '') + 
+                (shareData.url ? '\n\n' + shareData.url : '')
+            );
+
+            const urls = {
+                whatsapp: `https://wa.me/?text=${fullText}`,
+                telegram: `https://t.me/share/url?url=${url}&text=${text}`,
+                twitter: `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
+                facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`,
+                linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
+                email: `mailto:?subject=${title}&body=${fullText}`,
+                sms: `sms:?body=${fullText}`
+            };
+
+            if (urls[platform]) {
+                window.open(urls[platform], '_blank');
+                showStatus(`Opening ${platform}...`, 'success');
+            }
+        }
+
+        async function copyToClipboard() {
+            const shareData = getShareData();
+            if (!shareData) return;
+
+            const fullText = 
+                (shareData.title ? shareData.title + '\n\n' : '') + 
+                (shareData.text || '') + 
+                (shareData.url ? '\n\n' + shareData.url : '');
+
+            try {
+                await navigator.clipboard.writeText(fullText);
+                showStatus('Copied to clipboard!', 'success');
+            } catch (err) {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = fullText;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showStatus('Copied to clipboard!', 'success');
+                } catch (e) {
+                    showStatus('Failed to copy', 'error');
+                }
+                document.body.removeChild(textarea);
+            }
+        }
+    </script>
+</body>
+</html>
