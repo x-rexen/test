@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多设备计数器</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        h1 { color: #333; margin-bottom: 10px; }
+        .subtitle { color: #666; margin-bottom: 30px; }
+        .count {
+            font-size: 80px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+        .buttons { display: flex; gap: 15px; justify-content: center; }
+        button {
+            width: 60px;
+            height: 60px;
+            font-size: 30px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        button:active { transform: scale(0.95); }
+        .add { background: #4CAF50; color: white; }
+        .sub { background: #f44336; color: white; }
+        .reset { background: #ff9800; color: white; font-size: 16px; }
+        .status {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #999;
+        }
+        .online { color: #4CAF50; }
+        .offline { color: #f44336; }
+        .warning { color: #ff9800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 实时计数器</h1>
+        <p class="subtitle">多设备同步</p>
+        
+        <div class="count" id="count">0</div>
+        
+        <div class="buttons">
+            <button class="sub" onclick="update(-1)">−</button>
+            <button class="reset" onclick="reset()">归零</button>
+            <button class="add" onclick="update(1)">+</button>
+        </div>
+        
+        <p class="status">状态: <span id="status">连接中...</span></p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <script>
+        const statusEl = document.getElementById('status');
+        const countEl = document.getElementById('count');
+        
+        // 多个备用节点
+        const gun = Gun({
+            peers: [
+                'https://gun-manhattan.herokuapp.com/gun',
+                'https://gun-us.herokuapp.com/gun',
+                'https://gunjs.herokuapp.com/gun',
+                'https://gun-ams1.erebos.xyz/gun',
+                'https://gun-sjc1.erebos.xyz/gun'
+            ],
+            localStorage: true,  // 本地存储备份
+            radisk: true
+        });
+        
+        // 你的唯一房间名
+        const ROOM = 'my-counter-' + 'change-this-name';
+        const counter = gun.get(ROOM);
+        
+        let connected = false;
+        let lastValue = 0;
+        
+        // 监听计数变化
+        counter.get('value').on(function(value) {
+            if (value !== undefined && value !== null) {
+                connected = true;
+                lastValue = value;
+                countEl.textContent = value;
+                statusEl.textContent = '已连接 ✓';
+                statusEl.className = 'online';
+            }
+        });
+        
+        // 初始化：尝试读取一次
+        counter.get('value').once(function(value) {
+            if (value === undefined || value === null) {
+                // 如果没有值，初始化为 0
+                counter.get('value').put(0);
+            } else {
+                connected = true;
+                lastValue = value;
+                countEl.textContent = value;
+                statusEl.textContent = '已连接 ✓';
+                statusEl.className = 'online';
+            }
+        });
+        
+        // 5秒后检查连接状态
+        setTimeout(function() {
+            if (!connected) {
+                statusEl.textContent = '使用本地模式（未连接到云端）';
+                statusEl.className = 'warning';
+            }
+        }, 5000);
+        
+        // 更新计数
+        function update(delta) {
+            const newValue = lastValue + delta;
+            lastValue = newValue;
+            countEl.textContent = newValue;
+            counter.get('value').put(newValue);
+        }
+        
+        // 重置
+        function reset() {
+            lastValue = 0;
+            countEl.textContent = 0;
+            counter.get('value').put(0);
+        }
+    </script>
+</body>
+</html>
