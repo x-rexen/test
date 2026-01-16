@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mark Counter - WebRTC Sync</title>
+    <title>Mark Counter - Instant Sync</title>
     <style>
         * {
             margin: 0;
@@ -12,435 +12,550 @@
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
             min-height: 100vh;
             color: #fff;
             padding: 20px;
         }
         .container {
-            max-width: 800px;
+            max-width: 500px;
             margin: 0 auto;
         }
         h1 {
             text-align: center;
-            margin-bottom: 30px;
-            font-size: 2rem;
-            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf, #ff6b6b);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        .connection-panel {
-            background: rgba(255,255,255,0.1);
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        .sync-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            background: rgba(46, 213, 115, 0.15);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(46, 213, 115, 0.3);
+        }
+        .sync-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #2ed573;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 5px #2ed573; }
+            50% { opacity: 0.5; box-shadow: 0 0 15px #2ed573; }
+        }
+        .room-panel {
+            background: rgba(255,255,255,0.08);
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 20px;
+            text-align: center;
         }
-        .connection-panel h3 {
-            margin-bottom: 15px;
-            color: #00d4ff;
+        .room-panel label {
+            display: block;
+            margin-bottom: 10px;
+            color: #aaa;
         }
-        .status {
+        .room-input-group {
             display: flex;
-            align-items: center;
             gap: 10px;
-            margin-bottom: 15px;
         }
-        .status-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #ff4757;
-        }
-        .status-dot.connected {
-            background: #2ed573;
-            box-shadow: 0 0 10px #2ed573;
-        }
-        .offer-section, .answer-section {
-            margin-bottom: 15px;
-        }
-        textarea {
-            width: 100%;
-            height: 80px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
+        .room-input {
+            flex: 1;
+            padding: 12px 15px;
+            background: rgba(0,0,0,0.4);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 10px;
             color: #fff;
-            padding: 10px;
-            font-size: 12px;
-            resize: none;
-            margin-top: 8px;
+            font-size: 18px;
+            text-align: center;
+            letter-spacing: 3px;
+            font-weight: bold;
         }
-        .btn-row {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 10px;
+        .room-input:focus {
+            outline: none;
+            border-color: #00d4ff;
         }
-        button {
-            padding: 10px 20px;
+        .btn {
+            padding: 12px 20px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: bold;
-            transition: all 0.3s;
+            transition: all 0.2s;
+            font-size: 14px;
         }
-        .btn-primary {
-            background: linear-gradient(90deg, #00d4ff, #0099cc);
-            color: #fff;
-        }
-        .btn-secondary {
-            background: linear-gradient(90deg, #7b2cbf, #5a189a);
-            color: #fff;
-        }
-        .btn-success {
-            background: linear-gradient(90deg, #2ed573, #17a05a);
-            color: #fff;
-        }
-        button:hover {
+        .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 20px rgba(0,0,0,0.3);
         }
-        .marks-panel {
-            background: rgba(255,255,255,0.1);
-            border-radius: 15px;
+        .btn:active {
+            transform: translateY(0);
+        }
+        .btn-join {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #fff;
+        }
+        .main-counter {
+            background: rgba(255,255,255,0.08);
+            border-radius: 20px;
             padding: 30px;
-        }
-        .marks-panel h3 {
             margin-bottom: 20px;
-            color: #00d4ff;
+        }
+        .count-display {
             text-align: center;
+            margin-bottom: 25px;
         }
-        .marks-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
+        .count-value {
+            font-size: 5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+        .multiplier-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: linear-gradient(135deg, #ffa502, #e67e22);
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .main-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
             margin-bottom: 20px;
         }
-        .mark-item {
+        .counter-btn {
+            width: 80px;
+            height: 80px;
+            font-size: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #fff;
+        }
+        .counter-btn:hover {
+            transform: scale(1.1);
+        }
+        .counter-btn:active {
+            transform: scale(0.95);
+        }
+        .btn-minus {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+        .btn-plus {
+            background: linear-gradient(135deg, #2ed573, #20bf6b);
+            box-shadow: 0 8px 25px rgba(46, 213, 115, 0.4);
+        }
+        .btn-multi {
+            background: linear-gradient(135deg, #ffa502, #e67e22);
+            box-shadow: 0 8px 25px rgba(255, 165, 2, 0.4);
+            font-size: 2rem;
+        }
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .quick-btn {
+            padding: 12px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quick-btn:hover {
+            background: rgba(0, 212, 255, 0.3);
+            border-color: #00d4ff;
+        }
+        .quick-btn.negative {
+            color: #ff6b6b;
+        }
+        .quick-btn.positive {
+            color: #2ed573;
+        }
+        .quick-btn.reset {
+            background: rgba(255, 107, 107, 0.2);
+            border-color: rgba(255, 107, 107, 0.5);
+            color: #ff6b6b;
+        }
+        .quick-btn.set {
+            background: rgba(123, 44, 191, 0.2);
+            border-color: rgba(123, 44, 191, 0.5);
+            color: #b388ff;
+        }
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
             background: rgba(0,0,0,0.3);
             border-radius: 12px;
             padding: 15px;
             text-align: center;
         }
-        .mark-item .label {
-            font-size: 14px;
-            color: #aaa;
-            margin-bottom: 8px;
+        .stat-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 5px;
         }
-        .mark-item .value {
-            font-size: 2.5rem;
+        .stat-value {
+            font-size: 1.3rem;
             font-weight: bold;
             color: #00d4ff;
-        }
-        .counter-controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-        .counter-btn {
-            width: 60px;
-            height: 60px;
-            font-size: 2rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .btn-add {
-            background: linear-gradient(135deg, #2ed573, #17a05a);
-            color: #fff;
-        }
-        .btn-subtract {
-            background: linear-gradient(135deg, #ff4757, #c0392b);
-            color: #fff;
-        }
-        .btn-multiply {
-            background: linear-gradient(135deg, #ffa502, #e67e22);
-            color: #fff;
-        }
-        .quick-actions {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-        .quick-btn {
-            padding: 8px 16px;
-            font-size: 14px;
         }
         .history-panel {
             background: rgba(0,0,0,0.3);
             border-radius: 12px;
             padding: 15px;
-            max-height: 200px;
+            max-height: 180px;
             overflow-y: auto;
         }
-        .history-panel h4 {
+        .history-title {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
             margin-bottom: 10px;
-            color: #7b2cbf;
         }
         .history-item {
-            padding: 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            font-size: 13px;
             display: flex;
             justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 13px;
         }
         .history-item:last-child {
             border-bottom: none;
         }
-        .history-item .time {
-            color: #888;
+        .history-action {
+            font-weight: bold;
         }
-        .history-item .action {
+        .history-action.positive { color: #2ed573; }
+        .history-action.negative { color: #ff6b6b; }
+        .history-action.reset { color: #ffa502; }
+        .history-time {
+            color: #666;
+        }
+        .set-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .set-modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: #1a1a2e;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            min-width: 280px;
+        }
+        .modal-content h3 {
+            margin-bottom: 20px;
             color: #00d4ff;
         }
-        .peer-indicator {
-            margin-top: 15px;
-            padding: 10px;
-            background: rgba(46, 213, 115, 0.2);
-            border-radius: 8px;
-            text-align: center;
-            display: none;
-        }
-        .peer-indicator.active {
-            display: block;
-        }
-        .instructions {
-            background: rgba(123, 44, 191, 0.2);
-            border-radius: 12px;
+        .modal-input {
+            width: 100%;
             padding: 15px;
+            font-size: 24px;
+            text-align: center;
+            background: rgba(0,0,0,0.4);
+            border: 2px solid #00d4ff;
+            border-radius: 10px;
+            color: #fff;
             margin-bottom: 20px;
-            font-size: 14px;
-            line-height: 1.6;
         }
-        .instructions ol {
-            padding-left: 20px;
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
         }
-        .instructions li {
-            margin-bottom: 8px;
+        .modal-buttons .btn {
+            flex: 1;
+        }
+        .btn-cancel {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .btn-confirm {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #fff;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>⚡ Mark Counter with WebRTC Sync</h1>
-        
-        <div class="instructions">
-            <strong>📡 How to Connect:</strong>
-            <ol>
-                <li><strong>Host:</strong> Click "Create Room" → Copy the offer code → Share with peer</li>
-                <li><strong>Peer:</strong> Paste offer → Click "Join Room" → Copy answer → Send back to host</li>
-                <li><strong>Host:</strong> Paste answer → Click "Complete Connection"</li>
-            </ol>
+        <h1>⚡ Mark Counter</h1>
+        <p class="subtitle">Real-time sync across tabs</p>
+
+        <div class="sync-status">
+            <div class="sync-dot"></div>
+            <span>Live Sync Active — Open multiple tabs to sync!</span>
         </div>
 
-        <div class="connection-panel">
-            <h3>🔗 WebRTC Connection</h3>
-            <div class="status">
-                <div class="status-dot" id="statusDot"></div>
-                <span id="statusText">Disconnected</span>
-            </div>
-            
-            <div class="offer-section">
-                <label>Signal Data:</label>
-                <textarea id="signalData" placeholder="Offer/Answer will appear here..."></textarea>
-                <div class="btn-row">
-                    <button class="btn-primary" onclick="createOffer()">Create Room</button>
-                    <button class="btn-secondary" onclick="createAnswer()">Join Room</button>
-                    <button class="btn-success" onclick="completeConnection()">Complete Connection</button>
-                    <button class="btn-primary" onclick="copySignal()">📋 Copy</button>
-                </div>
-            </div>
-            
-            <div class="peer-indicator" id="peerIndicator">
-                🟢 Peer Connected! Data syncs automatically.
+        <div class="room-panel">
+            <label>🔗 Room Code (share with others)</label>
+            <div class="room-input-group">
+                <input type="text" class="room-input" id="roomCode" value="ROOM1" maxlength="10" spellcheck="false">
+                <button class="btn btn-join" onclick="joinRoom()">Join</button>
             </div>
         </div>
 
-        <div class="marks-panel">
-            <h3>📊 Mark Counter</h3>
-            
-            <div class="marks-grid">
-                <div class="mark-item">
-                    <div class="label">Current Count</div>
-                    <div class="value" id="currentCount">0</div>
-                </div>
-                <div class="mark-item">
-                    <div class="label">Total Operations</div>
-                    <div class="value" id="totalOps">0</div>
-                </div>
-                <div class="mark-item">
-                    <div class="label">Multiplier</div>
-                    <div class="value" id="multiplier">1x</div>
-                </div>
-                <div class="mark-item">
-                    <div class="label">Last Sync</div>
-                    <div class="value" id="lastSync" style="font-size: 1rem;">--:--</div>
-                </div>
+        <div class="main-counter">
+            <div class="count-display">
+                <div class="count-value" id="countDisplay">0</div>
+                <div class="multiplier-badge" id="multiBadge">×1</div>
             </div>
 
-            <div class="counter-controls">
-                <button class="counter-btn btn-subtract" onclick="updateCount(-1)">−</button>
-                <button class="counter-btn btn-add" onclick="updateCount(1)">+</button>
-                <button class="counter-btn btn-multiply" onclick="cycleMultiplier()">×</button>
+            <div class="main-buttons">
+                <button class="counter-btn btn-minus" onclick="change(-1)">−</button>
+                <button class="counter-btn btn-multi" onclick="cycleMulti()">×</button>
+                <button class="counter-btn btn-plus" onclick="change(1)">+</button>
             </div>
 
-            <div class="quick-actions">
-                <button class="quick-btn btn-primary" onclick="updateCount(5)">+5</button>
-                <button class="quick-btn btn-primary" onclick="updateCount(10)">+10</button>
-                <button class="quick-btn btn-primary" onclick="updateCount(25)">+25</button>
-                <button class="quick-btn btn-secondary" onclick="updateCount(-5)">-5</button>
-                <button class="quick-btn btn-secondary" onclick="updateCount(-10)">-10</button>
-                <button class="quick-btn btn-success" onclick="resetCount()">Reset</button>
+            <div class="quick-grid">
+                <button class="quick-btn positive" onclick="change(5)">+5</button>
+                <button class="quick-btn positive" onclick="change(10)">+10</button>
+                <button class="quick-btn positive" onclick="change(25)">+25</button>
+                <button class="quick-btn positive" onclick="change(100)">+100</button>
+                <button class="quick-btn negative" onclick="change(-5)">−5</button>
+                <button class="quick-btn negative" onclick="change(-10)">−10</button>
+                <button class="quick-btn negative" onclick="change(-25)">−25</button>
+                <button class="quick-btn negative" onclick="change(-100)">−100</button>
+                <button class="quick-btn reset" onclick="resetCount()">Reset</button>
+                <button class="quick-btn set" onclick="showSetModal()">Set</button>
+                <button class="quick-btn" onclick="change(-count)">Clear</button>
+                <button class="quick-btn" onclick="doubleCount()">×2</button>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-label">Operations</div>
+                    <div class="stat-value" id="opsDisplay">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Peak</div>
+                    <div class="stat-value" id="peakDisplay">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Last Sync</div>
+                    <div class="stat-value" id="syncTime">--:--</div>
+                </div>
             </div>
 
             <div class="history-panel">
-                <h4>📜 History</h4>
+                <div class="history-title">📜 Recent Activity</div>
                 <div id="historyList"></div>
             </div>
         </div>
     </div>
 
-    <script>
-        // State
-        let count = 0;
-        let totalOps = 0;
-        let multiplier = 1;
-        const multipliers = [1, 2, 5, 10];
-        let multiplierIndex = 0;
-        let history = [];
+    <div class="set-modal" id="setModal">
+        <div class="modal-content">
+            <h3>Set Count Value</h3>
+            <input type="number" class="modal-input" id="setInput" value="0">
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" onclick="hideSetModal()">Cancel</button>
+                <button class="btn btn-confirm" onclick="confirmSet()">Set</button>
+            </div>
+        </div>
+    </div>
 
-        // WebRTC
-        let pc = null;
-        let dc = null;
-        const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+    <script>
+        let count = 0;
+        let ops = 0;
+        let peak = 0;
+        let multi = 1;
+        const multiOptions = [1, 2, 5, 10, 25, 50, 100];
+        let multiIndex = 0;
+        let history = [];
+        let channel = null;
+        let currentRoom = 'ROOM1';
+
+        function joinRoom() {
+            const newRoom = document.getElementById('roomCode').value.trim().toUpperCase() || 'ROOM1';
+            if (newRoom !== currentRoom) {
+                currentRoom = newRoom;
+                document.getElementById('roomCode').value = currentRoom;
+                setupChannel();
+                // Request current state from other tabs
+                channel.postMessage({ type: 'request_state' });
+            }
+        }
+
+        function setupChannel() {
+            if (channel) channel.close();
+            channel = new BroadcastChannel('marks_' + currentRoom);
+            channel.onmessage = (e) => {
+                if (e.data.type === 'update') {
+                    count = e.data.count;
+                    ops = e.data.ops;
+                    peak = e.data.peak;
+                    history = e.data.history || [];
+                    updateUI();
+                    document.getElementById('syncTime').textContent = new Date().toLocaleTimeString().slice(0,5);
+                } else if (e.data.type === 'request_state') {
+                    // Send current state to new tab
+                    broadcast();
+                }
+            };
+        }
+
+        function broadcast() {
+            if (channel) {
+                channel.postMessage({ 
+                    type: 'update', 
+                    count, 
+                    ops, 
+                    peak,
+                    history 
+                });
+            }
+        }
 
         function updateUI() {
-            document.getElementById('currentCount').textContent = count;
-            document.getElementById('totalOps').textContent = totalOps;
-            document.getElementById('multiplier').textContent = multiplier + 'x';
+            document.getElementById('countDisplay').textContent = count.toLocaleString();
+            document.getElementById('opsDisplay').textContent = ops;
+            document.getElementById('peakDisplay').textContent = peak.toLocaleString();
+            document.getElementById('multiBadge').textContent = '×' + multi;
+            renderHistory();
         }
 
-        function updateCount(delta) {
-            const actualDelta = delta * multiplier;
-            count += actualDelta;
-            totalOps++;
-            addHistory(actualDelta > 0 ? `+${actualDelta}` : `${actualDelta}`);
+        function change(delta) {
+            const actual = delta * multi;
+            count += actual;
+            ops++;
+            if (count > peak) peak = count;
+            addHistory(actual);
             updateUI();
-            syncData();
+            broadcast();
         }
 
-        function cycleMultiplier() {
-            multiplierIndex = (multiplierIndex + 1) % multipliers.length;
-            multiplier = multipliers[multiplierIndex];
-            updateUI();
+        function cycleMulti() {
+            multiIndex = (multiIndex + 1) % multiOptions.length;
+            multi = multiOptions[multiIndex];
+            document.getElementById('multiBadge').textContent = '×' + multi;
         }
 
         function resetCount() {
             count = 0;
-            totalOps = 0;
-            addHistory('Reset');
+            ops++;
+            addHistory('RESET');
             updateUI();
-            syncData();
+            broadcast();
+        }
+
+        function doubleCount() {
+            const prev = count;
+            count *= 2;
+            ops++;
+            if (count > peak) peak = count;
+            addHistory('×2 (' + prev + '→' + count + ')');
+            updateUI();
+            broadcast();
         }
 
         function addHistory(action) {
-            const time = new Date().toLocaleTimeString();
-            history.unshift({ time, action });
-            if (history.length > 20) history.pop();
-            renderHistory();
+            const time = new Date().toLocaleTimeString().slice(0,5);
+            let display, type;
+            if (action === 'RESET') {
+                display = 'Reset to 0';
+                type = 'reset';
+            } else if (typeof action === 'string') {
+                display = action;
+                type = 'reset';
+            } else {
+                display = (action > 0 ? '+' : '') + action.toLocaleString();
+                type = action > 0 ? 'positive' : 'negative';
+            }
+            history.unshift({ display, type, time, result: count });
+            if (history.length > 15) history.pop();
         }
 
         function renderHistory() {
-            const list = document.getElementById('historyList');
-            list.innerHTML = history.map(h => 
+            const el = document.getElementById('historyList');
+            if (history.length === 0) {
+                el.innerHTML = '<div style="color:#666;text-align:center;padding:20px;">No activity yet</div>';
+                return;
+            }
+            el.innerHTML = history.map(h => 
                 `<div class="history-item">
-                    <span class="action">${h.action}</span>
-                    <span class="time">${h.time}</span>
+                    <span class="history-action ${h.type}">${h.display}</span>
+                    <span>→ ${h.result.toLocaleString()}</span>
+                    <span class="history-time">${h.time}</span>
                 </div>`
             ).join('');
         }
 
-        function syncData() {
-            if (dc && dc.readyState === 'open') {
-                dc.send(JSON.stringify({ count, totalOps, history }));
-                document.getElementById('lastSync').textContent = new Date().toLocaleTimeString();
-            }
+        function showSetModal() {
+            document.getElementById('setInput').value = count;
+            document.getElementById('setModal').classList.add('active');
+            document.getElementById('setInput').focus();
         }
 
-        function receiveData(data) {
-            const parsed = JSON.parse(data);
-            count = parsed.count;
-            totalOps = parsed.totalOps;
-            history = parsed.history || [];
+        function hideSetModal() {
+            document.getElementById('setModal').classList.remove('active');
+        }
+
+        function confirmSet() {
+            const val = parseInt(document.getElementById('setInput').value) || 0;
+            const prev = count;
+            count = val;
+            ops++;
+            if (count > peak) peak = count;
+            addHistory('SET (' + prev + '→' + count + ')');
             updateUI();
-            renderHistory();
-            document.getElementById('lastSync').textContent = new Date().toLocaleTimeString();
+            broadcast();
+            hideSetModal();
         }
 
-        function setConnected(connected) {
-            document.getElementById('statusDot').classList.toggle('connected', connected);
-            document.getElementById('statusText').textContent = connected ? 'Connected' : 'Disconnected';
-            document.getElementById('peerIndicator').classList.toggle('active', connected);
-        }
+        // Handle Enter key in modal
+        document.getElementById('setInput').addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') confirmSet();
+            if (e.key === 'Escape') hideSetModal();
+        });
 
-        function setupDataChannel(channel) {
-            dc = channel;
-            dc.onopen = () => setConnected(true);
-            dc.onclose = () => setConnected(false);
-            dc.onmessage = (e) => receiveData(e.data);
-        }
-
-        async function createOffer() {
-            pc = new RTCPeerConnection(config);
-            const channel = pc.createDataChannel('marks');
-            setupDataChannel(channel);
-            
-            pc.onicecandidate = (e) => {
-                if (!e.candidate) {
-                    document.getElementById('signalData').value = btoa(JSON.stringify(pc.localDescription));
-                }
-            };
-            
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-        }
-
-        async function createAnswer() {
-            const offerData = document.getElementById('signalData').value;
-            const offer = JSON.parse(atob(offerData));
-            
-            pc = new RTCPeerConnection(config);
-            pc.ondatachannel = (e) => setupDataChannel(e.channel);
-            
-            pc.onicecandidate = (e) => {
-                if (!e.candidate) {
-                    document.getElementById('signalData').value = btoa(JSON.stringify(pc.localDescription));
-                }
-            };
-            
-            await pc.setRemoteDescription(offer);
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-        }
-
-        async function completeConnection() {
-            const answerData = document.getElementById('signalData').value;
-            const answer = JSON.parse(atob(answerData));
-            await pc.setRemoteDescription(answer);
-        }
-
-        function copySignal() {
-            const textarea = document.getElementById('signalData');
-            textarea.select();
-            document.execCommand('copy');
-        }
-
+        // Initialize
+        setupChannel();
         updateUI();
     </script>
 </body>
