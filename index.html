@@ -1,146 +1,447 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多设备计数器</title>
+    <title>Mark Counter - WebRTC Sync</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 20px;
         }
         .container {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .connection-panel {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .connection-panel h3 {
+            margin-bottom: 15px;
+            color: #00d4ff;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff4757;
+        }
+        .status-dot.connected {
+            background: #2ed573;
+            box-shadow: 0 0 10px #2ed573;
+        }
+        .offer-section, .answer-section {
+            margin-bottom: 15px;
+        }
+        textarea {
+            width: 100%;
+            height: 80px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            color: #fff;
+            padding: 10px;
+            font-size: 12px;
+            resize: none;
+            margin-top: 8px;
+        }
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #00d4ff, #0099cc);
+            color: #fff;
+        }
+        .btn-secondary {
+            background: linear-gradient(90deg, #7b2cbf, #5a189a);
+            color: #fff;
+        }
+        .btn-success {
+            background: linear-gradient(90deg, #2ed573, #17a05a);
+            color: #fff;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        .marks-panel {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 30px;
+        }
+        .marks-panel h3 {
+            margin-bottom: 20px;
+            color: #00d4ff;
             text-align: center;
         }
-        h1 { color: #333; margin-bottom: 10px; }
-        .subtitle { color: #666; margin-bottom: 30px; }
-        .count {
-            font-size: 80px;
-            font-weight: bold;
-            color: #667eea;
-            margin: 20px 0;
+        .marks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
         }
-        .buttons { display: flex; gap: 15px; justify-content: center; }
-        button {
+        .mark-item {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+        .mark-item .label {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 8px;
+        }
+        .mark-item .value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        .counter-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .counter-btn {
             width: 60px;
             height: 60px;
-            font-size: 30px;
-            border: none;
+            font-size: 2rem;
             border-radius: 50%;
-            cursor: pointer;
-            transition: transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        button:active { transform: scale(0.95); }
-        .add { background: #4CAF50; color: white; }
-        .sub { background: #f44336; color: white; }
-        .reset { background: #ff9800; color: white; font-size: 16px; }
-        .status {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #999;
+        .btn-add {
+            background: linear-gradient(135deg, #2ed573, #17a05a);
+            color: #fff;
         }
-        .online { color: #4CAF50; }
-        .offline { color: #f44336; }
-        .warning { color: #ff9800; }
+        .btn-subtract {
+            background: linear-gradient(135deg, #ff4757, #c0392b);
+            color: #fff;
+        }
+        .btn-multiply {
+            background: linear-gradient(135deg, #ffa502, #e67e22);
+            color: #fff;
+        }
+        .quick-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .quick-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        .history-panel {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .history-panel h4 {
+            margin-bottom: 10px;
+            color: #7b2cbf;
+        }
+        .history-item {
+            padding: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        .history-item .time {
+            color: #888;
+        }
+        .history-item .action {
+            color: #00d4ff;
+        }
+        .peer-indicator {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(46, 213, 115, 0.2);
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+        .peer-indicator.active {
+            display: block;
+        }
+        .instructions {
+            background: rgba(123, 44, 191, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .instructions ol {
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📊 实时计数器</h1>
-        <p class="subtitle">多设备同步</p>
+        <h1>⚡ Mark Counter with WebRTC Sync</h1>
         
-        <div class="count" id="count">0</div>
-        
-        <div class="buttons">
-            <button class="sub" onclick="update(-1)">−</button>
-            <button class="reset" onclick="reset()">归零</button>
-            <button class="add" onclick="update(1)">+</button>
+        <div class="instructions">
+            <strong>📡 How to Connect:</strong>
+            <ol>
+                <li><strong>Host:</strong> Click "Create Room" → Copy the offer code → Share with peer</li>
+                <li><strong>Peer:</strong> Paste offer → Click "Join Room" → Copy answer → Send back to host</li>
+                <li><strong>Host:</strong> Paste answer → Click "Complete Connection"</li>
+            </ol>
         </div>
-        
-        <p class="status">状态: <span id="status">连接中...</span></p>
+
+        <div class="connection-panel">
+            <h3>🔗 WebRTC Connection</h3>
+            <div class="status">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Disconnected</span>
+            </div>
+            
+            <div class="offer-section">
+                <label>Signal Data:</label>
+                <textarea id="signalData" placeholder="Offer/Answer will appear here..."></textarea>
+                <div class="btn-row">
+                    <button class="btn-primary" onclick="createOffer()">Create Room</button>
+                    <button class="btn-secondary" onclick="createAnswer()">Join Room</button>
+                    <button class="btn-success" onclick="completeConnection()">Complete Connection</button>
+                    <button class="btn-primary" onclick="copySignal()">📋 Copy</button>
+                </div>
+            </div>
+            
+            <div class="peer-indicator" id="peerIndicator">
+                🟢 Peer Connected! Data syncs automatically.
+            </div>
+        </div>
+
+        <div class="marks-panel">
+            <h3>📊 Mark Counter</h3>
+            
+            <div class="marks-grid">
+                <div class="mark-item">
+                    <div class="label">Current Count</div>
+                    <div class="value" id="currentCount">0</div>
+                </div>
+                <div class="mark-item">
+                    <div class="label">Total Operations</div>
+                    <div class="value" id="totalOps">0</div>
+                </div>
+                <div class="mark-item">
+                    <div class="label">Multiplier</div>
+                    <div class="value" id="multiplier">1x</div>
+                </div>
+                <div class="mark-item">
+                    <div class="label">Last Sync</div>
+                    <div class="value" id="lastSync" style="font-size: 1rem;">--:--</div>
+                </div>
+            </div>
+
+            <div class="counter-controls">
+                <button class="counter-btn btn-subtract" onclick="updateCount(-1)">−</button>
+                <button class="counter-btn btn-add" onclick="updateCount(1)">+</button>
+                <button class="counter-btn btn-multiply" onclick="cycleMultiplier()">×</button>
+            </div>
+
+            <div class="quick-actions">
+                <button class="quick-btn btn-primary" onclick="updateCount(5)">+5</button>
+                <button class="quick-btn btn-primary" onclick="updateCount(10)">+10</button>
+                <button class="quick-btn btn-primary" onclick="updateCount(25)">+25</button>
+                <button class="quick-btn btn-secondary" onclick="updateCount(-5)">-5</button>
+                <button class="quick-btn btn-secondary" onclick="updateCount(-10)">-10</button>
+                <button class="quick-btn btn-success" onclick="resetCount()">Reset</button>
+            </div>
+
+            <div class="history-panel">
+                <h4>📜 History</h4>
+                <div id="historyList"></div>
+            </div>
+        </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script>
-        const statusEl = document.getElementById('status');
-        const countEl = document.getElementById('count');
-        
-        // 多个备用节点
-        const gun = Gun({
-            peers: [
-                'https://gun-manhattan.herokuapp.com/gun',
-                'https://gun-us.herokuapp.com/gun',
-                'https://gunjs.herokuapp.com/gun',
-                'https://gun-ams1.erebos.xyz/gun',
-                'https://gun-sjc1.erebos.xyz/gun'
-            ],
-            localStorage: true,  // 本地存储备份
-            radisk: true
-        });
-        
-        // 你的唯一房间名
-        const ROOM = 'my-counter-' + 'change-this-name';
-        const counter = gun.get(ROOM);
-        
-        let connected = false;
-        let lastValue = 0;
-        
-        // 监听计数变化
-        counter.get('value').on(function(value) {
-            if (value !== undefined && value !== null) {
-                connected = true;
-                lastValue = value;
-                countEl.textContent = value;
-                statusEl.textContent = '已连接 ✓';
-                statusEl.className = 'online';
-            }
-        });
-        
-        // 初始化：尝试读取一次
-        counter.get('value').once(function(value) {
-            if (value === undefined || value === null) {
-                // 如果没有值，初始化为 0
-                counter.get('value').put(0);
-            } else {
-                connected = true;
-                lastValue = value;
-                countEl.textContent = value;
-                statusEl.textContent = '已连接 ✓';
-                statusEl.className = 'online';
-            }
-        });
-        
-        // 5秒后检查连接状态
-        setTimeout(function() {
-            if (!connected) {
-                statusEl.textContent = '使用本地模式（未连接到云端）';
-                statusEl.className = 'warning';
-            }
-        }, 5000);
-        
-        // 更新计数
-        function update(delta) {
-            const newValue = lastValue + delta;
-            lastValue = newValue;
-            countEl.textContent = newValue;
-            counter.get('value').put(newValue);
+        // State
+        let count = 0;
+        let totalOps = 0;
+        let multiplier = 1;
+        const multipliers = [1, 2, 5, 10];
+        let multiplierIndex = 0;
+        let history = [];
+
+        // WebRTC
+        let pc = null;
+        let dc = null;
+        const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+        function updateUI() {
+            document.getElementById('currentCount').textContent = count;
+            document.getElementById('totalOps').textContent = totalOps;
+            document.getElementById('multiplier').textContent = multiplier + 'x';
         }
-        
-        // 重置
-        function reset() {
-            lastValue = 0;
-            countEl.textContent = 0;
-            counter.get('value').put(0);
+
+        function updateCount(delta) {
+            const actualDelta = delta * multiplier;
+            count += actualDelta;
+            totalOps++;
+            addHistory(actualDelta > 0 ? `+${actualDelta}` : `${actualDelta}`);
+            updateUI();
+            syncData();
         }
+
+        function cycleMultiplier() {
+            multiplierIndex = (multiplierIndex + 1) % multipliers.length;
+            multiplier = multipliers[multiplierIndex];
+            updateUI();
+        }
+
+        function resetCount() {
+            count = 0;
+            totalOps = 0;
+            addHistory('Reset');
+            updateUI();
+            syncData();
+        }
+
+        function addHistory(action) {
+            const time = new Date().toLocaleTimeString();
+            history.unshift({ time, action });
+            if (history.length > 20) history.pop();
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            list.innerHTML = history.map(h => 
+                `<div class="history-item">
+                    <span class="action">${h.action}</span>
+                    <span class="time">${h.time}</span>
+                </div>`
+            ).join('');
+        }
+
+        function syncData() {
+            if (dc && dc.readyState === 'open') {
+                dc.send(JSON.stringify({ count, totalOps, history }));
+                document.getElementById('lastSync').textContent = new Date().toLocaleTimeString();
+            }
+        }
+
+        function receiveData(data) {
+            const parsed = JSON.parse(data);
+            count = parsed.count;
+            totalOps = parsed.totalOps;
+            history = parsed.history || [];
+            updateUI();
+            renderHistory();
+            document.getElementById('lastSync').textContent = new Date().toLocaleTimeString();
+        }
+
+        function setConnected(connected) {
+            document.getElementById('statusDot').classList.toggle('connected', connected);
+            document.getElementById('statusText').textContent = connected ? 'Connected' : 'Disconnected';
+            document.getElementById('peerIndicator').classList.toggle('active', connected);
+        }
+
+        function setupDataChannel(channel) {
+            dc = channel;
+            dc.onopen = () => setConnected(true);
+            dc.onclose = () => setConnected(false);
+            dc.onmessage = (e) => receiveData(e.data);
+        }
+
+        async function createOffer() {
+            pc = new RTCPeerConnection(config);
+            const channel = pc.createDataChannel('marks');
+            setupDataChannel(channel);
+            
+            pc.onicecandidate = (e) => {
+                if (!e.candidate) {
+                    document.getElementById('signalData').value = btoa(JSON.stringify(pc.localDescription));
+                }
+            };
+            
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+        }
+
+        async function createAnswer() {
+            const offerData = document.getElementById('signalData').value;
+            const offer = JSON.parse(atob(offerData));
+            
+            pc = new RTCPeerConnection(config);
+            pc.ondatachannel = (e) => setupDataChannel(e.channel);
+            
+            pc.onicecandidate = (e) => {
+                if (!e.candidate) {
+                    document.getElementById('signalData').value = btoa(JSON.stringify(pc.localDescription));
+                }
+            };
+            
+            await pc.setRemoteDescription(offer);
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+        }
+
+        async function completeConnection() {
+            const answerData = document.getElementById('signalData').value;
+            const answer = JSON.parse(atob(answerData));
+            await pc.setRemoteDescription(answer);
+        }
+
+        function copySignal() {
+            const textarea = document.getElementById('signalData');
+            textarea.select();
+            document.execCommand('copy');
+        }
+
+        updateUI();
     </script>
 </body>
 </html>
