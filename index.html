@@ -443,6 +443,124 @@
             color: white;
         }
 
+        .timer-controls .delete-btn {
+            background: #6c5ce7;
+            color: white;
+        }
+
+        .start-competition-btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 184, 148, 0.4); }
+            50% { box-shadow: 0 0 40px rgba(0, 184, 148, 0.8); }
+        }
+
+        .start-competition-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .start-competition-btn:disabled {
+            background: linear-gradient(135deg, #636e72, #b2bec3);
+            cursor: not-allowed;
+            animation: none;
+        }
+
+        .competition-status {
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-block;
+            margin: 10px 0;
+        }
+
+        .competition-status.pending {
+            background: rgba(253, 203, 110, 0.2);
+            color: #feca57;
+        }
+
+        .competition-status.running {
+            background: rgba(0, 184, 148, 0.2);
+            color: #00b894;
+        }
+
+        .competition-status.ended {
+            background: rgba(233, 69, 96, 0.2);
+            color: #e94560;
+        }
+
+        /* Confirmation Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            border: 2px solid #e94560;
+        }
+
+        .modal-content h3 {
+            color: #e94560;
+            margin-bottom: 15px;
+        }
+
+        .modal-content p {
+            color: #a0a0a0;
+            margin-bottom: 25px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .modal-buttons button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-buttons .confirm-btn {
+            background: #e94560;
+            color: white;
+        }
+
+        .modal-buttons .cancel-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
         .scores-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -755,6 +873,9 @@
 
                 <div id="ref-timer" class="competition-timer hidden">00:00</div>
 
+                <!-- Status for referees in Mode 2 -->
+                <div id="ref-status" class="competition-status pending hidden">⏳ Waiting for competition to start...</div>
+
                 <div id="referee-cards" class="contestant-cards">
                     <!-- Contestant cards for scoring will appear here -->
                 </div>
@@ -781,6 +902,22 @@
                         <button class="start-btn" onclick="toggleTimer()">▶ Start</button>
                         <button class="reset-btn" onclick="resetTimer()">↺ Reset</button>
                     </div>
+
+                    <!-- Start Competition Button for Mode 2 -->
+                    <div id="sb-start-competition" class="hidden">
+                        <div id="sb-competition-status" class="competition-status pending">⏳ Waiting to Start</div>
+                        <br>
+                        <button id="sb-start-btn" class="start-competition-btn" onclick="startCompetition()">
+                            🚀 Start Competition
+                        </button>
+                    </div>
+
+                    <!-- Delete Competition Button -->
+                    <div style="margin-top: 20px;">
+                        <button class="timer-controls delete-btn" onclick="confirmDeleteCompetition()" style="padding: 10px 25px; border-radius: 8px;">
+                            🗑️ Delete Competition
+                        </button>
+                    </div>
                 </div>
 
                 <div id="scores-grid" class="scores-grid">
@@ -799,16 +936,16 @@
         // ============================================================
         // CONFIGURATION - Add your Firebase config here
         // ============================================================
-       const firebaseConfig = {
-         apiKey: "AIzaSyB2EAzctjXJXEm-ZfIdqDiXDHaGRSVdTxY",
-         authDomain: "markcounting.firebaseapp.com",
-         databaseURL: "https://markcounting-default-rtdb.asia-southeast1.firebasedatabase.app",
-         projectId: "markcounting",
-         storageBucket: "markcounting.firebasestorage.app",
-         messagingSenderId: "141500133139",
-         appId: "1:141500133139:web:b3687a740c658a206f34e6",
-         measurementId: "G-8E4QF5VBTD"
-       };
+        const firebaseConfig = {
+          apiKey: "AIzaSyB2EAzctjXJXEm-ZfIdqDiXDHaGRSVdTxY",
+          authDomain: "markcounting.firebaseapp.com",
+          databaseURL: "https://markcounting-default-rtdb.asia-southeast1.firebasedatabase.app",
+          projectId: "markcounting",
+          storageBucket: "markcounting.firebasestorage.app",
+          messagingSenderId: "141500133139",
+          appId: "1:141500133139:web:b3687a740c658a206f34e6",
+          measurementId: "G-8E4QF5VBTD"
+        };
 
         // Google Sheets App Script URL
         const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbyWuZiZlahwLKr2z0SjIKgqT4N6dBR1F0kJQJqZIC49V0prausabUkCc5V3ICGtRAsm/exec";
@@ -1017,6 +1154,7 @@
 
             if (competitionData.mode === 2) {
                 document.getElementById('ref-timer').classList.remove('hidden');
+                document.getElementById('ref-status').classList.remove('hidden');
             }
 
             // Listen for real-time updates
@@ -1029,11 +1167,34 @@
                     updateRefereeCount();
                     if (competitionData.mode === 2) {
                         updateRefTimer();
+                        updateRefereeStatus();
                     }
                 }
             });
 
             unsubscribers.push(() => compRef.off('value', unsub));
+        }
+
+        function updateRefereeStatus() {
+            const statusEl = document.getElementById('ref-status');
+            if (!statusEl || !competitionData) return;
+
+            const status = competitionData.status || 'pending';
+            const timerRunning = competitionData.timerState?.running || false;
+            const remaining = competitionData.timerState?.remaining || 0;
+
+            statusEl.classList.remove('pending', 'running', 'ended');
+
+            if (status === 'running' || timerRunning) {
+                statusEl.classList.add('running');
+                statusEl.textContent = '🟢 Competition Active - Score Now!';
+            } else if (remaining <= 0 && status !== 'pending') {
+                statusEl.classList.add('ended');
+                statusEl.textContent = '🔴 Competition Ended';
+            } else {
+                statusEl.classList.add('pending');
+                statusEl.textContent = '⏳ Waiting for competition to start...';
+            }
         }
 
         function updateRefereeCards() {
@@ -1268,7 +1429,9 @@
             if (competitionData.mode === 2) {
                 document.getElementById('sb-timer').classList.remove('hidden');
                 document.getElementById('sb-timer-controls').classList.remove('hidden');
+                document.getElementById('sb-start-competition').classList.remove('hidden');
                 updateScoreboardTimer();
+                updateCompetitionStatus();
             }
 
             // Sort contestants by score
@@ -1389,6 +1552,125 @@
                 remaining: duration,
                 lastUpdate: firebase.database.ServerValue.TIMESTAMP
             });
+
+            // Reset competition status to pending
+            database.ref(`competitions/${currentCompetitionId}/status`).set('pending');
+        }
+
+        // ============================================================
+        // Start Competition (Mode 2)
+        // ============================================================
+        function startCompetition() {
+            if (!currentCompetitionId || !competitionData) return;
+
+            // Set status to running and start timer
+            database.ref(`competitions/${currentCompetitionId}`).update({
+                status: 'running'
+            }).then(() => {
+                // Also start the timer
+                database.ref(`competitions/${currentCompetitionId}/timerState`).update({
+                    running: true,
+                    lastUpdate: firebase.database.ServerValue.TIMESTAMP
+                });
+
+                startTimerSync();
+                showStatus('Competition started!', 'success');
+            }).catch(err => {
+                showStatus('Error starting competition: ' + err.message, 'error');
+            });
+        }
+
+        function updateCompetitionStatus() {
+            const statusEl = document.getElementById('sb-competition-status');
+            const startBtn = document.getElementById('sb-start-btn');
+
+            if (!statusEl || !competitionData) return;
+
+            const status = competitionData.status || 'pending';
+            const timerRunning = competitionData.timerState?.running || false;
+            const remaining = competitionData.timerState?.remaining || 0;
+
+            statusEl.classList.remove('pending', 'running', 'ended');
+
+            if (status === 'running' || timerRunning) {
+                statusEl.classList.add('running');
+                statusEl.textContent = '🟢 Competition Running';
+                startBtn.disabled = true;
+                startBtn.textContent = '🏃 Competition In Progress';
+            } else if (remaining <= 0 && status !== 'pending') {
+                statusEl.classList.add('ended');
+                statusEl.textContent = '🔴 Competition Ended';
+                startBtn.disabled = true;
+                startBtn.textContent = '✓ Competition Completed';
+            } else {
+                statusEl.classList.add('pending');
+                statusEl.textContent = '⏳ Waiting to Start';
+                startBtn.disabled = false;
+                startBtn.textContent = '🚀 Start Competition';
+            }
+        }
+
+        // ============================================================
+        // Delete Competition
+        // ============================================================
+        function confirmDeleteCompetition() {
+            if (!currentCompetitionId) {
+                showStatus('No competition selected', 'error');
+                return;
+            }
+
+            // Create confirmation modal
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.id = 'delete-modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>⚠️ Delete Competition</h3>
+                    <p>Are you sure you want to permanently delete this competition?<br><br>
+                    <strong style="color: #feca57;">${competitionData?.name || currentCompetitionId}</strong><br><br>
+                    This action cannot be undone!</p>
+                    <div class="modal-buttons">
+                        <button class="cancel-btn" onclick="closeDeleteModal()">Cancel</button>
+                        <button class="confirm-btn" onclick="deleteCompetition()">🗑️ Delete</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('delete-modal');
+            if (modal) modal.remove();
+        }
+
+        function deleteCompetition() {
+            if (!currentCompetitionId) return;
+
+            const compId = currentCompetitionId;
+
+            database.ref(`competitions/${compId}`).remove()
+                .then(() => {
+                    closeDeleteModal();
+                    showStatus('Competition deleted successfully!', 'success');
+
+                    // Reset state
+                    currentCompetitionId = null;
+                    competitionData = null;
+
+                    // Hide scoreboard display
+                    document.getElementById('scoreboard-display').classList.add('hidden');
+
+                    // Clear the input
+                    document.getElementById('view-comp-id').value = '';
+
+                    // Cleanup listeners
+                    unsubscribers.forEach(unsub => unsub());
+                    unsubscribers = [];
+                })
+                .catch(err => {
+                    closeDeleteModal();
+                    showStatus('Error deleting competition: ' + err.message, 'error');
+                });
         }
 
         // ============================================================
