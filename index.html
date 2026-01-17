@@ -1,373 +1,1130 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-full">
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simple Message App</title>
+  <title>ScoreMaster Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      padding: 20px;
+      box-sizing: border-box;
+      font-family: 'Outfit', sans-serif;
     }
     
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    h1 {
-      text-align: center;
-      color: white;
-      margin-bottom: 30px;
-      font-size: 32px;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    .gradient-bg {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
     }
     
-    #messageBox {
-      background: white;
-      border-radius: 15px;
-      padding: 25px;
-      margin-bottom: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    .card-glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
-    #messages {
-      background: white;
-      border-radius: 15px;
-      padding: 25px;
-      min-height: 400px;
-      max-height: 500px;
-      overflow-y: auto;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    .btn-primary {
+      background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+      transition: all 0.3s ease;
     }
     
-    .message {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 10px;
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(233, 69, 96, 0.4);
+    }
+    
+    .btn-secondary {
+      background: linear-gradient(135deg, #4a69bd 0%, #6a89cc 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(74, 105, 189, 0.4);
+    }
+    
+    .score-card {
+      transition: all 0.3s ease;
+    }
+    
+    .score-card:hover {
+      transform: scale(1.02);
+    }
+    
+    .pulse-animation {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .contestant-btn {
+      transition: all 0.15s ease;
+    }
+    
+    .contestant-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .toast {
       animation: slideIn 0.3s ease;
     }
-
+    
     @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
     }
     
-    .message .name {
-      font-weight: bold;
-      font-size: 16px;
-      margin-bottom: 8px;
-      opacity: 0.9;
+    .modal-overlay {
+      animation: fadeIn 0.2s ease;
     }
     
-    .message .text {
-      font-size: 15px;
-      margin-bottom: 8px;
-      line-height: 1.5;
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
     
-    .message .time {
-      font-size: 12px;
-      opacity: 0.7;
+    .loading-spinner {
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top: 3px solid #e94560;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
     }
     
-    input, textarea {
-      width: 100%;
-      padding: 15px;
-      margin-bottom: 15px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 15px;
-      font-family: inherit;
-      transition: border-color 0.3s;
-    }
-
-    input:focus, textarea:focus {
-      outline: none;
-      border-color: #667eea;
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
     
-    textarea {
-      resize: vertical;
-      min-height: 80px;
+    input[type="color"] {
+      -webkit-appearance: none;
+      border: none;
+      cursor: pointer;
     }
-
-    button {
-      width: 100%;
-      padding: 15px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
+    
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    
+    input[type="color"]::-webkit-color-swatch {
       border: none;
       border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-    }
-
-    button:active {
-      transform: translateY(0);
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    
-    #status {
-      text-align: center;
-      margin-top: 15px;
-      font-size: 14px;
-      font-weight: 500;
-      min-height: 20px;
-    }
-    
-    .no-messages {
-      text-align: center;
-      color: #999;
-      padding: 80px 20px;
-      font-size: 16px;
-    }
-
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #667eea;
-      font-size: 16px;
-    }
-
-    /* Scrollbar styling */
-    #messages::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    #messages::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 10px;
-    }
-
-    #messages::-webkit-scrollbar-thumb {
-      background: #667eea;
-      border-radius: 10px;
-    }
-
-    .message-count {
-      text-align: center;
-      color: white;
-      margin-bottom: 15px;
-      font-size: 14px;
-      opacity: 0.9;
     }
   </style>
   <style>@view-transition { navigation: auto; }</style>
-  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
-  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
-  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
  </head>
- <body>
-  <div class="container">
-   <h1>💬 Message Board</h1>
-   <div class="message-count" id="messageCount">
-    Loading...
-   </div><!-- Form to send message -->
-   <div id="messageBox"><input type="text" id="nameInput" placeholder="Your name" maxlength="30" autocomplete="name"> <textarea id="messageInput" placeholder="Type your message... (Press Ctrl+Enter to send)" rows="3" maxlength="500"></textarea> <button id="sendBtn">Send Message 🚀</button>
-    <div id="status"></div>
-   </div><!-- Display messages -->
-   <div id="messages">
-    <div class="loading">
-     ⏳ Loading messages...
+ <body class="h-full gradient-bg text-white overflow-auto">
+  <div id="app" class="min-h-full"><!-- Toast Container -->
+   <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div><!-- Main Navigation -->
+   <nav class="card-glass border-b border-white/10 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+     <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3 cursor-pointer" onclick="showView('home')">
+       <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-red-500 flex items-center justify-center">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+       </div>
+       <div>
+        <h1 id="app-title" class="text-xl font-bold">ScoreMaster Pro</h1>
+        <p id="app-tagline" class="text-xs text-white/60">Professional Competition Scoring</p>
+       </div>
+      </div>
+      <div class="flex gap-2"><button onclick="showView('join')" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition text-sm font-medium"> Join Competition </button> <button onclick="showView('spectate')" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition text-sm font-medium"> �� Spectate </button>
+      </div>
+     </div>
+    </div>
+   </nav><!-- Home View -->
+   <div id="view-home" class="view-container max-w-7xl mx-auto px-4 py-8">
+    <div class="text-center mb-12">
+     <h2 class="text-4xl font-bold mb-4 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">Welcome to ScoreMaster Pro</h2>
+     <p class="text-white/60 text-lg max-w-2xl mx-auto">Create and manage professional competitions with real-time scoring, multiple referees, and instant results.</p>
+    </div>
+    <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-12">
+     <div class="card-glass rounded-2xl p-8 text-center score-card cursor-pointer" onclick="showView('create')">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 to-red-500 flex items-center justify-center mx-auto mb-4">
+       <svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+       </svg>
+      </div>
+      <h3 class="text-xl font-bold mb-2">Create Competition</h3>
+      <p class="text-white/60 text-sm">Set up a new competition with custom rules and contestants</p>
+     </div>
+     <div class="card-glass rounded-2xl p-8 text-center score-card cursor-pointer" onclick="showView('join')">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center mx-auto mb-4">
+       <svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+       </svg>
+      </div>
+      <h3 class="text-xl font-bold mb-2">Join as Referee</h3>
+      <p class="text-white/60 text-sm">Enter a competition ID to start scoring</p>
+     </div>
+    </div><!-- Active Competitions -->
+    <div class="card-glass rounded-2xl p-6">
+     <div class="flex items-center justify-between mb-6">
+      <h3 class="text-xl font-bold">Your Competitions</h3><button onclick="loadCompetitions()" class="text-sm text-white/60 hover:text-white transition flex items-center gap-2">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+       </svg> Refresh </button>
+     </div>
+     <div id="competitions-list" class="space-y-3">
+      <div class="text-center py-8 text-white/40">
+       <p>No competitions yet. Create one to get started!</p>
+      </div>
+     </div>
+    </div>
+   </div><!-- Create Competition View -->
+   <div id="view-create" class="view-container hidden max-w-4xl mx-auto px-4 py-8"><button onclick="showView('home')" class="flex items-center gap-2 text-white/60 hover:text-white transition mb-6">
+     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+     </svg> Back to Home </button>
+    <div class="card-glass rounded-2xl p-8">
+     <h2 class="text-2xl font-bold mb-6">Create New Competition</h2>
+     <form id="create-form" onsubmit="createCompetition(event)" class="space-y-6"><!-- Basic Info -->
+      <div class="grid md:grid-cols-2 gap-4">
+       <div><label class="block text-sm font-medium text-white/80 mb-2">Competition Name *</label> <input type="text" id="comp-name" required class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-pink-500 focus:outline-none transition" placeholder="e.g., Dance Championship 2024">
+       </div>
+       <div><label class="block text-sm font-medium text-white/80 mb-2">Scoring Mode *</label> <select id="comp-mode" required onchange="toggleModeSettings()" class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-pink-500 focus:outline-none transition"> <option value="1">Mode 1: Average Scores</option> <option value="2">Mode 2: Consensus Scoring</option> </select>
+       </div>
+      </div>
+      <div><label class="block text-sm font-medium text-white/80 mb-2">Description</label> <textarea id="comp-description" rows="2" class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-pink-500 focus:outline-none transition resize-none" placeholder="Optional description..."></textarea>
+      </div><!-- Mode 1 Settings -->
+      <div id="mode1-settings" class="card-glass rounded-xl p-4 border border-blue-500/30">
+       <h4 class="font-semibold text-blue-400 mb-3">Mode 1: Average Scores</h4>
+       <p class="text-sm text-white/60 mb-4">Each referee submits a score for each contestant. The final score is the average of all referee scores.</p>
+       <div><label class="block text-sm font-medium text-white/80 mb-2">Score Range (Max)</label> <input type="number" id="mode1-max-score" value="10" min="1" max="100" class="w-32 px-4 py-2 rounded-lg bg-white/10 border border-white/20 focus:border-pink-500 focus:outline-none transition">
+       </div>
+      </div><!-- Mode 2 Settings -->
+      <div id="mode2-settings" class="card-glass rounded-xl p-4 border border-purple-500/30 hidden">
+       <h4 class="font-semibold text-purple-400 mb-3">Mode 2: Consensus Scoring</h4>
+       <p class="text-sm text-white/60 mb-4">Points are awarded when a threshold percentage of referees press the same score button within a time window.</p>
+       <div class="grid md:grid-cols-3 gap-4">
+        <div><label class="block text-sm font-medium text-white/80 mb-2">Duration (seconds)</label> <input type="number" id="mode2-duration" value="180" min="30" max="3600" class="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 focus:border-pink-500 focus:outline-none transition">
+        </div>
+        <div><label class="block text-sm font-medium text-white/80 mb-2">Consensus % Required</label> <input type="number" id="mode2-threshold" value="50" min="10" max="100" class="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 focus:border-pink-500 focus:outline-none transition">
+        </div>
+        <div><label class="block text-sm font-medium text-white/80 mb-2">Time Window (seconds)</label> <input type="number" id="mode2-window" value="0.5" min="0.1" max="5" step="0.1" class="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 focus:border-pink-500 focus:outline-none transition">
+        </div>
+        <div><label class="block text-sm font-medium text-white/80 mb-2">Point Value per Consensus</label> <input type="number" id="mode2-mark" value="1" min="1" max="10" class="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 focus:border-pink-500 focus:outline-none transition">
+        </div>
+       </div>
+      </div><!-- Contestants -->
+      <div>
+       <div class="flex items-center justify-between mb-4"><label class="block text-sm font-medium text-white/80">Contestants *</label> <button type="button" onclick="addContestant()" class="text-sm text-pink-400 hover:text-pink-300 transition flex items-center gap-1">
+         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+         </svg> Add Contestant </button>
+       </div>
+       <div id="contestants-container" class="space-y-3"><!-- Contestant rows will be added here -->
+       </div>
+      </div>
+      <div class="flex gap-4 pt-4"><button type="submit" id="create-btn" class="btn-primary px-8 py-3 rounded-xl font-semibold flex items-center gap-2"> <span>Create Competition</span> </button> <button type="button" onclick="showView('home')" class="px-8 py-3 rounded-xl bg-white/10 hover:bg-white/20 transition font-medium"> Cancel </button>
+      </div>
+     </form>
+    </div>
+   </div><!-- Join Competition View -->
+   <div id="view-join" class="view-container hidden max-w-lg mx-auto px-4 py-8"><button onclick="showView('home')" class="flex items-center gap-2 text-white/60 hover:text-white transition mb-6">
+     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+     </svg> Back to Home </button>
+    <div class="card-glass rounded-2xl p-8 text-center">
+     <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center mx-auto mb-6">
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+      </svg>
+     </div>
+     <h2 class="text-2xl font-bold mb-2">Join Competition</h2>
+     <p class="text-white/60 mb-6">Enter the competition ID to join as a referee</p>
+     <form onsubmit="joinCompetition(event)" class="space-y-4"><input type="text" id="join-comp-id" required class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-pink-500 focus:outline-none transition text-center text-lg tracking-wider uppercase" placeholder="COMPETITION ID"> <input type="text" id="join-referee-name" required class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-pink-500 focus:outline-none transition text-center" placeholder="Your Name (Referee)"> <button type="submit" id="join-btn" class="btn-secondary w-full py-3 rounded-xl font-semibold"> Join as Referee </button>
+     </form>
+    </div>
+   </div><!-- Spectate View -->
+   <div id="view-spectate" class="view-container hidden max-w-lg mx-auto px-4 py-8"><button onclick="showView('home')" class="flex items-center gap-2 text-white/60 hover:text-white transition mb-6">
+     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+     </svg> Back to Home </button>
+    <div class="card-glass rounded-2xl p-8 text-center">
+     <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center mx-auto mb-6"><span class="text-3xl">📺</span>
+     </div>
+     <h2 class="text-2xl font-bold mb-2">Spectate Competition</h2>
+     <p class="text-white/60 mb-6">Watch live scores without participating</p>
+     <form onsubmit="spectateCompetition(event)" class="space-y-4"><input type="text" id="spectate-comp-id" required class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-pink-500 focus:outline-none transition text-center text-lg tracking-wider uppercase" placeholder="COMPETITION ID"> <button type="submit" class="btn-primary w-full py-3 rounded-xl font-semibold"> Watch Live </button>
+     </form>
+    </div>
+   </div><!-- Referee Scoring View -->
+   <div id="view-referee" class="view-container hidden max-w-4xl mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-6"><button onclick="leaveCompetition()" class="flex items-center gap-2 text-white/60 hover:text-white transition">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg> Leave </button>
+     <div id="referee-timer" class="text-2xl font-bold font-mono hidden">
+      00:00
+     </div>
+    </div>
+    <div class="card-glass rounded-2xl p-6 mb-6">
+     <div class="flex items-start justify-between">
+      <div>
+       <h2 id="referee-comp-name" class="text-2xl font-bold mb-1">Competition Name</h2>
+       <p id="referee-comp-desc" class="text-white/60 text-sm mb-2"></p>
+       <div class="flex items-center gap-4 text-sm"><span id="referee-comp-mode" class="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400"></span> <span id="referee-comp-id-display" class="text-white/40 font-mono"></span>
+       </div>
+      </div>
+      <div class="text-right">
+       <p class="text-sm text-white/60">Referee</p>
+       <p id="referee-name-display" class="font-semibold"></p>
+      </div>
+     </div>
+    </div><!-- Mode 1 Scoring UI -->
+    <div id="referee-mode1" class="hidden">
+     <h3 class="text-lg font-semibold mb-4">Submit Scores</h3>
+     <div id="mode1-scoring-grid" class="grid gap-4"><!-- Contestant score inputs will be added here -->
+     </div><button onclick="submitMode1Scores()" id="submit-scores-btn" class="btn-primary w-full py-4 rounded-xl font-semibold mt-6"> Submit All Scores </button>
+    </div><!-- Mode 2 Scoring UI -->
+    <div id="referee-mode2" class="hidden">
+     <div class="text-center mb-6">
+      <p class="text-white/60 text-sm mb-2">Tap a contestant's button when they score!</p>
+      <p id="mode2-info" class="text-xs text-white/40"></p>
+     </div>
+     <div id="mode2-scoring-grid" class="grid gap-4"><!-- Contestant buttons will be added here -->
+     </div>
+     <div id="mode2-controls" class="flex gap-4 mt-6"><button onclick="startMode2Timer()" id="start-timer-btn" class="btn-primary flex-1 py-4 rounded-xl font-semibold"> ▶️ Start Competition </button> <button onclick="stopMode2Timer()" id="stop-timer-btn" class="btn-secondary flex-1 py-4 rounded-xl font-semibold hidden"> ⏹️ Stop Competition </button>
+     </div>
+    </div>
+   </div><!-- Live Scoreboard View -->
+   <div id="view-scoreboard" class="view-container hidden max-w-5xl mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-6"><button onclick="showView('home')" class="flex items-center gap-2 text-white/60 hover:text-white transition">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg> Exit </button>
+     <div class="flex items-center gap-4">
+      <div id="scoreboard-timer" class="text-3xl font-bold font-mono hidden">
+       00:00
+      </div>
+      <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-green-500 pulse-animation"></span> <span class="text-sm text-white/60">LIVE</span>
+      </div>
+     </div>
+    </div>
+    <div class="card-glass rounded-2xl p-6 mb-6">
+     <h2 id="scoreboard-comp-name" class="text-3xl font-bold text-center mb-2">Competition Name</h2>
+     <p id="scoreboard-comp-desc" class="text-white/60 text-center text-sm mb-4"></p>
+     <div class="flex justify-center gap-4 text-sm"><span id="scoreboard-comp-mode" class="px-4 py-2 rounded-full bg-purple-500/20 text-purple-400"></span> <span id="scoreboard-comp-status" class="px-4 py-2 rounded-full bg-green-500/20 text-green-400"></span>
+     </div>
+    </div>
+    <div id="scoreboard-grid" class="grid gap-4"><!-- Contestant scores will be displayed here -->
+    </div>
+    <div class="flex gap-4 mt-8"><button onclick="exportToGoogleSheet()" id="export-btn" class="btn-secondary flex-1 py-4 rounded-xl font-semibold flex items-center justify-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg> Export to Google Sheet </button>
+    </div>
+   </div><!-- Competition Created Modal -->
+   <div id="modal-created" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/70 modal-overlay" onclick="closeCreatedModal()"></div>
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md">
+     <div class="card-glass rounded-2xl p-8 mx-4">
+      <div class="text-center">
+       <div class="w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center mx-auto mb-6">
+        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+       </div>
+       <h3 class="text-2xl font-bold mb-2">Competition Created!</h3>
+       <p class="text-white/60 mb-6">Share this ID with your referees:</p>
+       <div class="bg-white/10 rounded-xl p-4 mb-6">
+        <p id="created-comp-id" class="text-2xl font-mono font-bold tracking-wider"></p>
+       </div>
+       <div class="flex gap-3"><button onclick="copyCompetitionId()" class="btn-secondary flex-1 py-3 rounded-xl font-semibold"> 📋 Copy ID </button> <button onclick="goToScoreboard()" class="btn-primary flex-1 py-3 rounded-xl font-semibold"> 📺 View Scoreboard </button>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Confirm Dialog -->
+   <div id="modal-confirm" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/70 modal-overlay"></div>
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-sm">
+     <div class="card-glass rounded-2xl p-6 mx-4">
+      <h3 id="confirm-title" class="text-xl font-bold mb-2">Confirm Action</h3>
+      <p id="confirm-message" class="text-white/60 mb-6"></p>
+      <div class="flex gap-3"><button onclick="cancelConfirm()" class="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/20 transition font-medium"> Cancel </button> <button onclick="executeConfirm()" id="confirm-action-btn" class="btn-primary flex-1 py-3 rounded-xl font-semibold"> Confirm </button>
+      </div>
+     </div>
     </div>
    </div>
   </div>
-  <script type="module">
-    // ========================================
-    // IMPORT DETA - Using correct CDN
-    // ========================================
-    let Deta;
-    try {
-      const module = await import('https://cdn.jsdelivr.net/npm/deta@1.0.3/dist/index.mjs');
-      Deta = module.Deta;
-    } catch (error) {
-      document.getElementById('messages').innerHTML = 
-        '<div class="no-messages">❌ Could not load Deta library.<br><br>Make sure you have an internet connection.</div>';
-      document.getElementById('status').innerHTML = 
-        '<span style="color: red;">Connection error</span>';
-      throw error;
-    }
-
-    // ========================================
-    // CONNECT TO DETA DATABASE
-    // ========================================
-    // 🔑 REPLACE THIS with your real Deta project key!
-    const PROJECT_KEY = 'YOUR_PROJECT_KEY_HERE';
+  <script>
+    // Configuration
+    const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbyWuZiZlahwLKr2z0SjIKgqT4N6dBR1F0kJQJqZIC49V0prausabUkCc5V3ICGtRAsm/exec';
     
-    if (PROJECT_KEY === 'YOUR_PROJECT_KEY_HERE') {
-      document.getElementById('messages').innerHTML = 
-        '<div class="no-messages">⚠️ Please add your Deta Project Key!<br><br>' +
-        '1. Go to <a href="https://deta.space" target="_blank">deta.space</a><br>' +
-        '2. Create a collection<br>' +
-        '3. Copy your project key<br>' +
-        '4. Replace YOUR_PROJECT_KEY_HERE in the code</div>';
-      document.getElementById('sendBtn').disabled = true;
+    // Default config for Element SDK
+    const defaultConfig = {
+      app_title: 'ScoreMaster Pro',
+      tagline: 'Professional Competition Scoring',
+      primary_color: '#e94560',
+      secondary_color: '#4a69bd',
+      background_color: '#1a1a2e',
+      text_color: '#ffffff',
+      surface_color: '#16213e'
+    };
+    
+    // State
+    let allData = [];
+    let currentCompetition = null;
+    let currentRefereeId = null;
+    let currentRefereeName = null;
+    let mode2Timer = null;
+    let mode2TimeRemaining = 0;
+    let mode2Active = false;
+    let confirmCallback = null;
+    let contestantCount = 0;
+    let isProcessingConsensus = false;
+    
+    // Element SDK Implementation
+    const elementImpl = {
+      defaultConfig,
+      async onConfigChange(config) {
+        const title = config.app_title || defaultConfig.app_title;
+        const tagline = config.tagline || defaultConfig.tagline;
+        
+        const titleEl = document.getElementById('app-title');
+        const taglineEl = document.getElementById('app-tagline');
+        
+        if (titleEl) titleEl.textContent = title;
+        if (taglineEl) taglineEl.textContent = tagline;
+      },
+      mapToCapabilities(config) {
+        return {
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        };
+      },
+      mapToEditPanelValues(config) {
+        return new Map([
+          ['app_title', config.app_title || defaultConfig.app_title],
+          ['tagline', config.tagline || defaultConfig.tagline]
+        ]);
+      }
+    };
+    
+    // Data SDK Handler
+    const dataHandler = {
+      onDataChanged(data) {
+        allData = data;
+        renderCompetitionsList();
+        updateCurrentView();
+      }
+    };
+    
+    // Initialize SDKs
+    async function initializeApp() {
+      if (window.elementSdk) {
+        await window.elementSdk.init(elementImpl);
+      }
+      
+      if (window.dataSdk) {
+        const result = await window.dataSdk.init(dataHandler);
+        if (!result.isOk) {
+          showToast('Failed to initialize data storage', 'error');
+        }
+      }
+      
+      // Add initial contestants
+      addContestant();
+      addContestant();
     }
-
-    const deta = Deta(PROJECT_KEY);
-    const db = deta.Base('messages');
-
-    // ========================================
-    // SEND MESSAGE FUNCTION
-    // ========================================
-    async function sendMessage() {
-      const nameInput = document.getElementById('nameInput');
-      const messageInput = document.getElementById('messageInput');
-      const sendBtn = document.getElementById('sendBtn');
-      const status = document.getElementById('status');
+    
+    // Utility Functions
+    function generateId() {
+      return Math.random().toString(36).substring(2, 8).toUpperCase();
+    }
+    
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const bgColor = type === 'error' ? 'bg-red-500' : type === 'warning' ? 'bg-yellow-500' : 'bg-green-500';
+      toast.className = `toast ${bgColor} px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium max-w-xs`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+    
+    function showConfirm(title, message, callback) {
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-message').textContent = message;
+      confirmCallback = callback;
+      document.getElementById('modal-confirm').classList.remove('hidden');
+    }
+    
+    function cancelConfirm() {
+      document.getElementById('modal-confirm').classList.add('hidden');
+      confirmCallback = null;
+    }
+    
+    function executeConfirm() {
+      document.getElementById('modal-confirm').classList.add('hidden');
+      if (confirmCallback) confirmCallback();
+      confirmCallback = null;
+    }
+    
+    // View Management
+    function showView(viewName) {
+      document.querySelectorAll('.view-container').forEach(v => v.classList.add('hidden'));
+      const view = document.getElementById(`view-${viewName}`);
+      if (view) view.classList.remove('hidden');
+    }
+    
+    function toggleModeSettings() {
+      const mode = document.getElementById('comp-mode').value;
+      document.getElementById('mode1-settings').classList.toggle('hidden', mode !== '1');
+      document.getElementById('mode2-settings').classList.toggle('hidden', mode !== '2');
+    }
+    
+    // Contestant Management
+    function addContestant() {
+      contestantCount++;
+      const container = document.getElementById('contestants-container');
+      const colors = ['#e94560', '#4a69bd', '#27ae60', '#f39c12', '#9b59b6', '#1abc9c', '#e74c3c', '#3498db'];
+      const defaultColor = colors[(contestantCount - 1) % colors.length];
       
-      const name = nameInput.value.trim();
-      const messageText = messageInput.value.trim();
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-3 contestant-row';
+      row.dataset.index = contestantCount;
+      row.innerHTML = `
+        <span class="text-white/40 text-sm w-6">${contestantCount}.</span>
+        <input type="text" required class="contestant-name flex-1 px-4 py-2 rounded-lg bg-white/10 border border-white/20 focus:border-pink-500 focus:outline-none transition" placeholder="Contestant name">
+        <input type="color" value="${defaultColor}" class="contestant-color w-10 h-10 rounded-lg cursor-pointer">
+        <button type="button" onclick="removeContestant(this)" class="p-2 text-white/40 hover:text-red-400 transition ${contestantCount <= 2 ? 'opacity-0 pointer-events-none' : ''}">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      `;
+      container.appendChild(row);
+    }
+    
+    function removeContestant(btn) {
+      const rows = document.querySelectorAll('.contestant-row');
+      if (rows.length > 2) {
+        btn.closest('.contestant-row').remove();
+        // Renumber
+        document.querySelectorAll('.contestant-row').forEach((row, i) => {
+          row.querySelector('span').textContent = `${i + 1}.`;
+        });
+        contestantCount = rows.length - 1;
+      }
+    }
+    
+    // Competition Management
+    async function createCompetition(e) {
+      e.preventDefault();
       
-      // Validate inputs
-      if (!name || !messageText) {
-        status.innerHTML = '<span style="color: #e74c3c;">⚠️ Please enter both name and message</span>';
+      const btn = document.getElementById('create-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+      
+      const name = document.getElementById('comp-name').value.trim();
+      const description = document.getElementById('comp-description').value.trim();
+      const mode = parseInt(document.getElementById('comp-mode').value);
+      
+      // Get contestants
+      const contestants = [];
+      document.querySelectorAll('.contestant-row').forEach(row => {
+        const nameInput = row.querySelector('.contestant-name');
+        const colorInput = row.querySelector('.contestant-color');
+        if (nameInput.value.trim()) {
+          contestants.push({
+            name: nameInput.value.trim(),
+            color: colorInput.value,
+            score: 0
+          });
+        }
+      });
+      
+      if (contestants.length < 2) {
+        showToast('Please add at least 2 contestants', 'error');
+        btn.disabled = false;
+        btn.innerHTML = 'Create Competition';
         return;
       }
       
-      // Disable button and show loading
-      sendBtn.disabled = true;
-      sendBtn.textContent = '⏳ Sending...';
-      status.innerHTML = '<span style="color: #667eea;">📤 Sending your message...</span>';
+      const compId = generateId();
       
-      try {
-        // Save to database
-        await db.put({
-          name: name,
-          message: messageText,
-          timestamp: new Date().toISOString()
+      const competition = {
+        type: 'competition',
+        competition_id: compId,
+        competition_name: name,
+        description: description,
+        mode: mode,
+        contestants: JSON.stringify(contestants),
+        duration: mode === 2 ? parseInt(document.getElementById('mode2-duration').value) : 0,
+        consensus_threshold: mode === 2 ? parseInt(document.getElementById('mode2-threshold').value) : 0,
+        consensus_window: mode === 2 ? parseFloat(document.getElementById('mode2-window').value) : 0,
+        mark_value: mode === 2 ? parseInt(document.getElementById('mode2-mark').value) : parseInt(document.getElementById('mode1-max-score').value),
+        created_at: new Date().toISOString(),
+        status: 'active'
+      };
+      
+      if (allData.length >= 999) {
+        showToast('Maximum storage limit reached. Please delete old competitions.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = 'Create Competition';
+        return;
+      }
+      
+      const result = await window.dataSdk.create(competition);
+      
+      btn.disabled = false;
+      btn.innerHTML = 'Create Competition';
+      
+      if (result.isOk) {
+        document.getElementById('created-comp-id').textContent = compId;
+        document.getElementById('modal-created').classList.remove('hidden');
+        document.getElementById('create-form').reset();
+        document.getElementById('contestants-container').innerHTML = '';
+        contestantCount = 0;
+        addContestant();
+        addContestant();
+      } else {
+        showToast('Failed to create competition', 'error');
+      }
+    }
+    
+    function closeCreatedModal() {
+      document.getElementById('modal-created').classList.add('hidden');
+      showView('home');
+    }
+    
+    function copyCompetitionId() {
+      const id = document.getElementById('created-comp-id').textContent;
+      navigator.clipboard.writeText(id).then(() => {
+        showToast('Competition ID copied!');
+      }).catch(() => {
+        showToast('Could not copy ID', 'error');
+      });
+    }
+    
+    function goToScoreboard() {
+      const compId = document.getElementById('created-comp-id').textContent;
+      document.getElementById('modal-created').classList.add('hidden');
+      loadScoreboard(compId);
+    }
+    
+    function renderCompetitionsList() {
+      const container = document.getElementById('competitions-list');
+      const competitions = allData.filter(d => d.type === 'competition');
+      
+      if (competitions.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-white/40">
+            <p>No competitions yet. Create one to get started!</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = competitions.map(comp => {
+        const contestants = JSON.parse(comp.contestants || '[]');
+        return `
+          <div class="card-glass rounded-xl p-4 flex items-center justify-between score-card">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl ${comp.mode === 1 ? 'bg-blue-500/20' : 'bg-purple-500/20'} flex items-center justify-center">
+                <span class="text-2xl">${comp.mode === 1 ? '📊' : '⚡'}</span>
+              </div>
+              <div>
+                <h4 class="font-semibold">${comp.competition_name}</h4>
+                <div class="flex items-center gap-2 text-sm text-white/60">
+                  <span class="font-mono">${comp.competition_id}</span>
+                  <span>•</span>
+                  <span>${contestants.length} contestants</span>
+                  <span>•</span>
+                  <span>Mode ${comp.mode}</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="loadScoreboard('${comp.competition_id}')" class="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition text-sm">
+                📺 View
+              </button>
+              <button onclick="deleteCompetition('${comp.__backendId}')" class="px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition text-sm">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function loadCompetitions() {
+      renderCompetitionsList();
+      showToast('Competitions refreshed');
+    }
+    
+    function deleteCompetition(backendId) {
+      showConfirm('Delete Competition', 'Are you sure you want to delete this competition? This cannot be undone.', async () => {
+        const comp = allData.find(d => d.__backendId === backendId);
+        if (comp) {
+          const result = await window.dataSdk.delete(comp);
+          if (result.isOk) {
+            // Also delete related scores
+            const relatedScores = allData.filter(d => d.type === 'score' && d.competition_id === comp.competition_id);
+            for (const score of relatedScores) {
+              await window.dataSdk.delete(score);
+            }
+            showToast('Competition deleted');
+          } else {
+            showToast('Failed to delete competition', 'error');
+          }
+        }
+      });
+    }
+    
+    // Join Competition
+    async function joinCompetition(e) {
+      e.preventDefault();
+      
+      const btn = document.getElementById('join-btn');
+      btn.disabled = true;
+      btn.textContent = 'Joining...';
+      
+      const compId = document.getElementById('join-comp-id').value.trim().toUpperCase();
+      const refereeName = document.getElementById('join-referee-name').value.trim();
+      
+      const competition = allData.find(d => d.type === 'competition' && d.competition_id === compId);
+      
+      if (!competition) {
+        showToast('Competition not found', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Join as Referee';
+        return;
+      }
+      
+      currentCompetition = competition;
+      currentRefereeId = generateId();
+      currentRefereeName = refereeName;
+      
+      btn.disabled = false;
+      btn.textContent = 'Join as Referee';
+      
+      setupRefereeView();
+    }
+    
+    function setupRefereeView() {
+      const comp = currentCompetition;
+      const contestants = JSON.parse(comp.contestants || '[]');
+      
+      document.getElementById('referee-comp-name').textContent = comp.competition_name;
+      document.getElementById('referee-comp-desc').textContent = comp.description || '';
+      document.getElementById('referee-comp-mode').textContent = comp.mode === 1 ? 'Mode 1: Average Scores' : 'Mode 2: Consensus Scoring';
+      document.getElementById('referee-comp-id-display').textContent = `ID: ${comp.competition_id}`;
+      document.getElementById('referee-name-display').textContent = currentRefereeName;
+      
+      if (comp.mode === 1) {
+        document.getElementById('referee-mode1').classList.remove('hidden');
+        document.getElementById('referee-mode2').classList.add('hidden');
+        document.getElementById('referee-timer').classList.add('hidden');
+        
+        const grid = document.getElementById('mode1-scoring-grid');
+        grid.innerHTML = contestants.map((c, i) => `
+          <div class="card-glass rounded-xl p-4 flex items-center gap-4" style="border-left: 4px solid ${c.color}">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg" style="background: ${c.color}20; color: ${c.color}">
+              ${i + 1}
+            </div>
+            <div class="flex-1">
+              <h4 class="font-semibold">${c.name}</h4>
+              <p class="text-sm text-white/60">Enter score (0-${comp.mark_value})</p>
+            </div>
+            <input type="number" id="score-input-${i}" min="0" max="${comp.mark_value}" step="0.1" class="w-24 px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-pink-500 focus:outline-none transition text-center text-lg font-bold" placeholder="0">
+          </div>
+        `).join('');
+      } else {
+        document.getElementById('referee-mode1').classList.add('hidden');
+        document.getElementById('referee-mode2').classList.remove('hidden');
+        document.getElementById('referee-timer').classList.remove('hidden');
+        document.getElementById('referee-timer').textContent = formatTime(comp.duration);
+        document.getElementById('mode2-info').textContent = `${comp.consensus_threshold}% consensus within ${comp.consensus_window}s = +${comp.mark_value} point(s)`;
+        
+        const grid = document.getElementById('mode2-scoring-grid');
+        grid.innerHTML = `
+          <div class="grid grid-cols-2 gap-4">
+            ${contestants.map((c, i) => `
+              <button onclick="mode2Vote(${i})" class="contestant-btn p-6 rounded-2xl text-center transition-all transform hover:scale-105 active:scale-95" style="background: ${c.color}; box-shadow: 0 10px 30px ${c.color}40">
+                <span class="text-3xl font-bold block mb-2">${c.name}</span>
+                <span class="text-sm opacity-80">Tap to score!</span>
+              </button>
+            `).join('')}
+          </div>
+        `;
+        
+        mode2TimeRemaining = comp.duration;
+      }
+      
+      showView('referee');
+    }
+    
+    function leaveCompetition() {
+      showConfirm('Leave Competition', 'Are you sure you want to leave this competition?', () => {
+        if (mode2Timer) {
+          clearInterval(mode2Timer);
+          mode2Timer = null;
+        }
+        currentCompetition = null;
+        currentRefereeId = null;
+        currentRefereeName = null;
+        mode2Active = false;
+        showView('home');
+      });
+    }
+    
+    // Mode 1 Scoring
+    async function submitMode1Scores() {
+      const btn = document.getElementById('submit-scores-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+      
+      const comp = currentCompetition;
+      const contestants = JSON.parse(comp.contestants || '[]');
+      
+      let allValid = true;
+      const scores = [];
+      
+      contestants.forEach((c, i) => {
+        const input = document.getElementById(`score-input-${i}`);
+        const value = parseFloat(input.value);
+        if (isNaN(value) || value < 0 || value > comp.mark_value) {
+          allValid = false;
+          input.classList.add('border-red-500');
+        } else {
+          input.classList.remove('border-red-500');
+          scores.push({
+            type: 'score',
+            competition_id: comp.competition_id,
+            referee_id: currentRefereeId,
+            referee_name: currentRefereeName,
+            contestant_index: i,
+            mark: value,
+            timestamp: new Date().toISOString(),
+            processed: false
+          });
+        }
+      });
+      
+      if (!allValid) {
+        showToast('Please enter valid scores for all contestants', 'error');
+        btn.disabled = false;
+        btn.innerHTML = 'Submit All Scores';
+        return;
+      }
+      
+      if (allData.length + scores.length >= 999) {
+        showToast('Storage limit reached', 'error');
+        btn.disabled = false;
+        btn.innerHTML = 'Submit All Scores';
+        return;
+      }
+      
+      for (const score of scores) {
+        await window.dataSdk.create(score);
+      }
+      
+      btn.disabled = false;
+      btn.innerHTML = 'Submit All Scores';
+      showToast('Scores submitted successfully!');
+      
+      // Clear inputs
+      contestants.forEach((c, i) => {
+        document.getElementById(`score-input-${i}`).value = '';
+      });
+    }
+    
+    // Mode 2 Scoring
+    function startMode2Timer() {
+      if (mode2Active) return;
+      
+      mode2Active = true;
+      document.getElementById('start-timer-btn').classList.add('hidden');
+      document.getElementById('stop-timer-btn').classList.remove('hidden');
+      
+      mode2Timer = setInterval(() => {
+        mode2TimeRemaining--;
+        document.getElementById('referee-timer').textContent = formatTime(mode2TimeRemaining);
+        
+        if (mode2TimeRemaining <= 0) {
+          stopMode2Timer();
+          showToast('Competition ended!', 'warning');
+        }
+      }, 1000);
+    }
+    
+    function stopMode2Timer() {
+      mode2Active = false;
+      if (mode2Timer) {
+        clearInterval(mode2Timer);
+        mode2Timer = null;
+      }
+      document.getElementById('start-timer-btn').classList.remove('hidden');
+      document.getElementById('stop-timer-btn').classList.add('hidden');
+    }
+    
+    async function mode2Vote(contestantIndex) {
+      if (!mode2Active) {
+        showToast('Competition not started yet', 'warning');
+        return;
+      }
+      
+      const comp = currentCompetition;
+      
+      if (allData.length >= 999) {
+        showToast('Storage limit reached', 'error');
+        return;
+      }
+      
+      const vote = {
+        type: 'vote',
+        competition_id: comp.competition_id,
+        referee_id: currentRefereeId,
+        referee_name: currentRefereeName,
+        contestant_index: contestantIndex,
+        mark: comp.mark_value,
+        timestamp: new Date().toISOString(),
+        processed: false
+      };
+      
+      await window.dataSdk.create(vote);
+      
+      // Visual feedback
+      const btn = document.querySelectorAll('.contestant-btn')[contestantIndex];
+      btn.classList.add('ring-4', 'ring-white');
+      setTimeout(() => btn.classList.remove('ring-4', 'ring-white'), 200);
+    }
+    
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    // Spectate
+    function spectateCompetition(e) {
+      e.preventDefault();
+      const compId = document.getElementById('spectate-comp-id').value.trim().toUpperCase();
+      loadScoreboard(compId);
+    }
+    
+    function loadScoreboard(compId) {
+      const competition = allData.find(d => d.type === 'competition' && d.competition_id === compId);
+      
+      if (!competition) {
+        showToast('Competition not found', 'error');
+        return;
+      }
+      
+      currentCompetition = competition;
+      updateScoreboard();
+      showView('scoreboard');
+    }
+    
+    function updateScoreboard() {
+      if (!currentCompetition) return;
+      
+      const comp = currentCompetition;
+      const contestants = JSON.parse(comp.contestants || '[]');
+      
+      document.getElementById('scoreboard-comp-name').textContent = comp.competition_name;
+      document.getElementById('scoreboard-comp-desc').textContent = comp.description || '';
+      document.getElementById('scoreboard-comp-mode').textContent = comp.mode === 1 ? 'Mode 1: Average Scores' : 'Mode 2: Consensus Scoring';
+      document.getElementById('scoreboard-comp-status').textContent = comp.status === 'active' ? '🟢 Active' : '⚪ Ended';
+      
+      // Calculate scores
+      const scores = allData.filter(d => (d.type === 'score' || d.type === 'vote') && d.competition_id === comp.competition_id);
+      
+      let contestantScores = contestants.map((c, i) => ({
+        ...c,
+        index: i,
+        totalScore: 0,
+        scoreCount: 0
+      }));
+      
+      if (comp.mode === 1) {
+        // Mode 1: Average all scores
+        document.getElementById('scoreboard-timer').classList.add('hidden');
+        
+        scores.forEach(s => {
+          if (s.contestant_index !== undefined && contestantScores[s.contestant_index]) {
+            contestantScores[s.contestant_index].totalScore += s.mark;
+            contestantScores[s.contestant_index].scoreCount++;
+          }
         });
         
-        // Clear inputs
-        messageInput.value = '';
+        contestantScores.forEach(c => {
+          c.finalScore = c.scoreCount > 0 ? (c.totalScore / c.scoreCount).toFixed(2) : '0.00';
+        });
+      } else {
+        // Mode 2: Consensus scoring
+        document.getElementById('scoreboard-timer').classList.remove('hidden');
         
-        // Show success
-        status.innerHTML = '<span style="color: #27ae60;">✅ Message sent successfully!</span>';
+        // Group votes by timestamp window
+        const votes = scores.filter(s => s.type === 'vote');
+        const windowMs = comp.consensus_window * 1000;
+        const threshold = comp.consensus_threshold / 100;
         
-        // Reload messages
-        await loadMessages();
+        // Get unique referee count
+        const uniqueReferees = new Set(votes.map(v => v.referee_id)).size;
+        const requiredVotes = Math.ceil(uniqueReferees * threshold);
         
-        // Clear status after 3 seconds
-        setTimeout(() => {
-          status.textContent = '';
-        }, 3000);
-        
-      } catch (error) {
-        status.innerHTML = '<span style="color: #e74c3c;">❌ Error: ' + error.message + '</span>';
-        console.error('Send error:', error);
-      } finally {
-        // Re-enable button
-        sendBtn.disabled = false;
-        sendBtn.textContent = 'Send Message 🚀';
-      }
-    }
-
-    // ========================================
-    // LOAD MESSAGES FUNCTION
-    // ========================================
-    async function loadMessages() {
-      const messagesDiv = document.getElementById('messages');
-      const messageCountDiv = document.getElementById('messageCount');
-      
-      try {
-        // Fetch all messages
-        const result = await db.fetch();
-        
-        // Update message count
-        messageCountDiv.textContent = `📊 ${result.items.length} message${result.items.length !== 1 ? 's' : ''}`;
-        
-        // Check if empty
-        if (result.items.length === 0) {
-          messagesDiv.innerHTML = '<div class="no-messages">📭 No messages yet.<br><br>Be the first to post! 🎉</div>';
-          return;
+        if (uniqueReferees > 0 && !isProcessingConsensus) {
+          // Simple consensus check: group by contestant and time window
+          const votesByContestant = {};
+          
+          votes.forEach(v => {
+            if (!votesByContestant[v.contestant_index]) {
+              votesByContestant[v.contestant_index] = [];
+            }
+            votesByContestant[v.contestant_index].push(v);
+          });
+          
+          // Check for consensus within time windows
+          Object.keys(votesByContestant).forEach(contestantIdx => {
+            const contestantVotes = votesByContestant[contestantIdx].sort((a, b) => 
+              new Date(a.timestamp) - new Date(b.timestamp)
+            );
+            
+            let windowStart = 0;
+            let consensusCount = 0;
+            
+            for (let i = 0; i < contestantVotes.length; i++) {
+              const currentTime = new Date(contestantVotes[i].timestamp).getTime();
+              const windowStartTime = new Date(contestantVotes[windowStart].timestamp).getTime();
+              
+              // Move window start if outside time window
+              while (currentTime - windowStartTime > windowMs && windowStart < i) {
+                windowStart++;
+              }
+              
+              // Count unique referees in window
+              const refereesInWindow = new Set();
+              for (let j = windowStart; j <= i; j++) {
+                refereesInWindow.add(contestantVotes[j].referee_id);
+              }
+              
+              if (refereesInWindow.size >= requiredVotes) {
+                consensusCount++;
+                windowStart = i + 1; // Reset window after consensus
+              }
+            }
+            
+            if (contestantScores[contestantIdx]) {
+              contestantScores[contestantIdx].totalScore = consensusCount * comp.mark_value;
+            }
+          });
         }
         
-        // Sort by newest first
-        const sorted = result.items.sort((a, b) => 
-          new Date(b.timestamp) - new Date(a.timestamp)
-        );
+        contestantScores.forEach(c => {
+          c.finalScore = c.totalScore;
+        });
+      }
+      
+      // Sort by score
+      contestantScores.sort((a, b) => parseFloat(b.finalScore) - parseFloat(a.finalScore));
+      
+      // Render scoreboard
+      const grid = document.getElementById('scoreboard-grid');
+      grid.innerHTML = contestantScores.map((c, rank) => `
+        <div class="card-glass rounded-2xl p-6 flex items-center gap-6 score-card" style="border-left: 6px solid ${c.color}">
+          <div class="w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-2xl ${rank === 0 ? 'bg-yellow-500/20 text-yellow-500' : rank === 1 ? 'bg-gray-400/20 text-gray-400' : rank === 2 ? 'bg-orange-500/20 text-orange-500' : 'bg-white/10 text-white/60'}">
+            ${rank === 0 ? '🥇' : rank === 1 ? '🥈' : rank === 2 ? '🥉' : rank + 1}
+          </div>
+          <div class="flex-1">
+            <h3 class="text-xl font-bold">${c.name}</h3>
+            <p class="text-sm text-white/60">${comp.mode === 1 ? `${c.scoreCount} referee${c.scoreCount !== 1 ? 's' : ''} scored` : 'Consensus points'}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-4xl font-bold" style="color: ${c.color}">${c.finalScore}</p>
+            <p class="text-sm text-white/60">${comp.mode === 1 ? 'avg score' : 'points'}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function updateCurrentView() {
+      const currentView = document.querySelector('.view-container:not(.hidden)');
+      if (currentView && currentView.id === 'view-scoreboard' && currentCompetition) {
+        // Refresh competition data
+        const updatedComp = allData.find(d => d.type === 'competition' && d.competition_id === currentCompetition.competition_id);
+        if (updatedComp) {
+          currentCompetition = updatedComp;
+          updateScoreboard();
+        }
+      }
+    }
+    
+    // Export to Google Sheets
+    async function exportToGoogleSheet() {
+      const btn = document.getElementById('export-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="loading-spinner"></div> Exporting...';
+      
+      const comp = currentCompetition;
+      if (!comp) {
+        showToast('No competition loaded', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '�� Export to Google Sheet';
+        return;
+      }
+      
+      const contestants = JSON.parse(comp.contestants || '[]');
+      const scores = allData.filter(d => (d.type === 'score' || d.type === 'vote') && d.competition_id === comp.competition_id);
+      
+      // Calculate final scores
+      let results = contestants.map((c, i) => {
+        const contestantScores = scores.filter(s => s.contestant_index === i);
+        let finalScore = 0;
         
-        // Build HTML
-        messagesDiv.innerHTML = sorted.map(item => {
-          const date = new Date(item.timestamp);
-          const timeString = date.toLocaleString();
+        if (comp.mode === 1) {
+          const total = contestantScores.reduce((sum, s) => sum + s.mark, 0);
+          finalScore = contestantScores.length > 0 ? (total / contestantScores.length).toFixed(2) : '0.00';
+        } else {
+          // Simplified consensus count
+          finalScore = contestantScores.length * comp.mark_value;
+        }
+        
+        return {
+          competition_id: comp.competition_id,
+          competition_name: comp.competition_name,
+          mode: comp.mode,
+          contestant_name: c.name,
+          contestant_rank: 0, // Will be set after sorting
+          final_score: finalScore,
+          referee_count: new Set(contestantScores.map(s => s.referee_id)).size
+        };
+      });
+      
+      // Sort and assign ranks
+      results.sort((a, b) => parseFloat(b.final_score) - parseFloat(a.final_score));
+      results.forEach((r, i) => r.contestant_rank = i + 1);
+      
+      // Send to Google Sheets
+      try {
+        for (const result of results) {
+          const formData = new URLSearchParams();
+          formData.append('competition_id', result.competition_id);
+          formData.append('competition_name', result.competition_name);
+          formData.append('mode', result.mode);
+          formData.append('contestant_name', result.contestant_name);
+          formData.append('contestant_rank', result.contestant_rank);
+          formData.append('final_score', result.final_score);
+          formData.append('referee_count', result.referee_count);
           
-          return `
-            <div class="message">
-              <div class="name">${escapeHtml(item.name)}</div>
-              <div class="text">${escapeHtml(item.message)}</div>
-              <div class="time">🕐 ${timeString}</div>
-            </div>
-          `;
-        }).join('');
+          await fetch(GOOGLE_SHEET_URL, {
+            method: 'POST',
+            body: formData,
+            mode: 'no-cors'
+          });
+        }
         
+        showToast('Data exported to Google Sheet!');
       } catch (error) {
-        messagesDiv.innerHTML = '<div class="no-messages">❌ Error loading messages<br><br>' + error.message + '</div>';
-        console.error('Load error:', error);
+        showToast('Export may have succeeded - check your sheet', 'warning');
       }
+      
+      btn.disabled = false;
+      btn.innerHTML = '📥 Export to Google Sheet';
     }
-
-    // ========================================
-    // HELPER: Escape HTML to prevent XSS
-    // ========================================
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    // ========================================
-    // EVENT LISTENERS
-    // ========================================
     
-    // Send button click
-    document.getElementById('sendBtn').addEventListener('click', sendMessage);
-    
-    // Ctrl+Enter to send
-    document.getElementById('messageInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-
-    // ========================================
-    // AUTO-REFRESH every 5 seconds
-    // ========================================
-    setInterval(loadMessages, 5000);
-
-    // ========================================
-    // LOAD MESSAGES ON START
-    // ========================================
-    loadMessages();
+    // Initialize
+    initializeApp();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bf209bff6c7dd39',t:'MTc2ODYxMjkxMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bf264fc27daa880',t:'MTc2ODYxNjY0Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
