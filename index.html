@@ -1702,7 +1702,7 @@
                         const scores = competitionData.mode1Scores?.[index];
                         data.referee_count = scores ? Object.keys(scores).length : 0;
                     } else {
-                        data.mark_history = (contestant.markHistory || []).map(h => `+${h.mark}`).join(', ');
+                        data.mark_history = (contestant.markHistory ? Object.values(contestant.markHistory) : []).map(h => `+${h.mark}`).join(', ');
                     }
 
                     // Send to Google Sheets
